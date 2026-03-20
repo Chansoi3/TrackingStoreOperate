@@ -10,90 +10,62 @@
   <link href="https://fonts.googleapis.com/css2?family=Prompt:wght@300;400;600&display=swap" rel="stylesheet">
   
   <style>
-    :root {
-      --primary-color: #0d6efd;
-      --bg-color: #f4f7f6;
-    }
-    body { 
-      background-color: var(--bg-color); 
-      font-family: 'Prompt', sans-serif; /* ใช้ฟอนต์ Prompt ให้ดูทันสมัย */
-    }
-    /* ดีไซน์ส่วนหัว (Header) */
+    :root { var(--bg-color): #f4f7f6; }
+    body { background-color: var(--bg-color); font-family: 'Prompt', sans-serif; }
+    
     .app-header {
       background: linear-gradient(135deg, #1e3c72 0%, #2a5298 100%);
-      color: white;
-      padding: 30px 0 50px 0;
-      border-radius: 0 0 20px 20px;
-      box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+      color: white; padding: 25px 0 45px 0; border-radius: 0 0 20px 20px;
     }
-    /* ดีไซน์กล่อง Filter ค้นหา */
+    
     .filter-card {
-      border-radius: 15px;
-      border: none;
-      box-shadow: 0 8px 20px rgba(0,0,0,0.08);
-      margin-top: -30px; /* ดึงขึ้นไปทับ Header เล็กน้อย */
-      position: relative;
-      z-index: 10;
-      background: white;
+      border-radius: 12px; border: none; box-shadow: 0 4px 15px rgba(0,0,0,0.08);
+      margin-top: -30px; position: relative; z-index: 10; background: white;
     }
-    /* ดีไซน์ตาราง */
+    
     .table-card {
-      border-radius: 15px;
-      border: none;
-      box-shadow: 0 4px 10px rgba(0,0,0,0.05);
-      background: white;
-      overflow: hidden;
+      border-radius: 12px; border: none; box-shadow: 0 4px 10px rgba(0,0,0,0.05); background: white;
     }
-    .table thead th {
-      background-color: #f8f9fa;
-      color: #495057;
-      font-weight: 600;
-      border-bottom: 2px solid #e9ecef;
-      white-space: nowrap; /* ไม่ให้หัวตารางตัดคำ */
-    }
-    .table tbody td {
-      vertical-align: middle;
-      white-space: nowrap; /* ป้องกันเนื้อหาตารางล้นบรรทัดในมือถือ */
-    }
+    
+    /* ปรับขนาดตารางให้กระทัดรัดสำหรับมือถือ */
+    .table thead th { background-color: #f8f9fa; color: #495057; font-size: 0.85rem; padding: 12px 8px; }
+    .table tbody td { padding: 12px 8px; vertical-align: middle; }
+    
     .status-badge {
-      min-width: 85px;
-      padding: 6px 10px;
-      border-radius: 20px;
-      font-weight: 600;
-      font-size: 0.8rem;
-      display: inline-block;
-      margin-top: 4px;
+      font-size: 0.7rem; padding: 4px 6px; border-radius: 6px; width: 100%; display: block; margin-top: 3px;
     }
-    /* แต่ง Select Dropdown */
-    .form-select { border-radius: 10px; border: 1px solid #ced4da; }
-    .form-select:focus { box-shadow: 0 0 0 0.25rem rgba(13, 110, 253, 0.15); border-color: #86b7fe; }
-    .btn-primary { border-radius: 10px; font-weight: 600; }
+    
+    .store-title { font-size: 0.95rem; line-height: 1.2; margin-bottom: 4px; }
+    .store-meta { font-size: 0.75rem; color: #6c757d; }
+    .time-text { font-size: 1rem; letter-spacing: -0.5px; }
+    
+    /* ทำให้ Dropdown เล็กกะทัดรัดลงเล็กน้อย */
+    .form-select, .btn { border-radius: 8px; }
   </style>
 </head>
 <body>
 
   <div class="app-header text-center">
-    <h2 class="fw-bold mb-2"><i class="bi bi-shop"></i> ระบบตรวจสอบการเปิด-ปิดสาขา</h2>
-    <p class="text-white-50 mb-0">Monitor Store Operation Time</p>
+    <h3 class="fw-bold mb-1"><i class="bi bi-shop-window"></i> เช็คเวลาเปิด-ปิดสาขา</h3>
   </div>
 
-  <div class="container px-3 px-md-4">
-    <div class="card filter-card p-3 p-md-4 mb-4">
-      <div class="row g-3 align-items-end">
-        <div class="col-md-5">
-          <label class="form-label text-muted fw-bold small"><i class="bi bi-geo-alt"></i> เลือก DistCode (DD)</label>
-          <select id="distSelect" class="form-select form-select-lg" onchange="updateAreaDropdown()">
-            <option value="">-- กำลังโหลดข้อมูล... --</option>
+  <div class="container px-2 px-md-4">
+    <div class="card filter-card p-3 mb-4 mx-2 mx-md-0">
+      <div class="row g-2 align-items-end">
+        <div class="col-6 col-md-5">
+          <label class="form-label text-muted fw-bold mb-1" style="font-size: 0.8rem;">รหัส DD</label>
+          <select id="distSelect" class="form-select" onchange="updateAreaDropdown()">
+            <option value="">-- โหลด... --</option>
           </select>
         </div>
-        <div class="col-md-5">
-          <label class="form-label text-muted fw-bold small"><i class="bi bi-pin-map"></i> เลือก AreaCode (AM)</label>
-          <select id="areaSelect" class="form-select form-select-lg">
-            <option value="">-- ทั้งหมด (แสดงทุก AM) --</option>
+        <div class="col-6 col-md-5">
+          <label class="form-label text-muted fw-bold mb-1" style="font-size: 0.8rem;">รหัส AM</label>
+          <select id="areaSelect" class="form-select">
+            <option value="">-- ทั้งหมด --</option>
           </select>
         </div>
-        <div class="col-md-2">
-          <button class="btn btn-primary btn-lg w-100 shadow-sm" onclick="fetchData()">
+        <div class="col-12 col-md-2 mt-3 mt-md-0">
+          <button class="btn btn-primary w-100 fw-bold" onclick="fetchData()">
             <i class="bi bi-search"></i> ค้นหา
           </button>
         </div>
@@ -101,22 +73,18 @@
     </div>
 
     <div id="loading" class="text-center my-5" style="display:none;">
-      <div class="spinner-border text-primary" style="width: 3rem; height: 3rem;" role="status"></div>
-      <h5 class="mt-3 text-muted fw-bold">กำลังดึงข้อมูล...</h5>
+      <div class="spinner-border text-primary" role="status"></div>
+      <p class="mt-2 text-muted fw-bold">กำลังดึงข้อมูล...</p>
     </div>
 
-    <div class="card table-card mb-5">
-      <div class="card-body p-0 table-responsive">
-        <table class="table table-hover mb-0">
+    <div class="card table-card mb-4 mx-2 mx-md-0">
+      <div class="card-body p-0">
+        <table class="table table-hover mb-0" style="table-layout: fixed; width: 100%;">
           <thead>
             <tr>
-              <th class="px-3">DD</th>
-              <th>AM</th>
-              <th>รหัสสาขา</th>
-              <th>ชื่อสาขา</th>
-              <th>วันที่</th>
-              <th class="text-center">เวลาเข้า (เปิดร้าน)</th>
-              <th class="text-center">เวลาออก (ปิดร้าน)</th>
+              <th style="width: 50%;">ข้อมูลสาขา</th>
+              <th class="text-center" style="width: 25%;">เวลาเข้า</th>
+              <th class="text-center" style="width: 25%;">เวลาออก</th>
             </tr>
           </thead>
           <tbody id="tableBody">
@@ -127,43 +95,34 @@
   </div>
 
   <script>
-    // ⚠️ นำ URL ของ Google Apps Script มาใส่ตรงนี้
+    // ⚠️ นำ URL ของ Google Apps Script มาใส่ที่นี่เหมือนเดิม
     const APPS_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbyNv8_4WfAFO5B3wcfxBWTNgHKhjSQid3r4jZfCVT2RKqAcVCDN_71neLwIg8opDxjB/exec";
-    
     let areaDataMapping = {};
 
     window.onload = function() {
       fetch(APPS_SCRIPT_URL + "?action=getDropdown")
-        .then(response => response.json())
+        .then(res => res.json())
         .then(data => populateDropdowns(data))
-        .catch(error => {
-          document.getElementById('distSelect').innerHTML = '<option value="">❌ โหลดข้อมูลล้มเหลว</option>';
-        });
+        .catch(err => document.getElementById('distSelect').innerHTML = '<option value="">❌ ข้อผิดพลาด</option>');
     };
 
     function populateDropdowns(data) {
       areaDataMapping = data.mapping;
       let distSelect = document.getElementById('distSelect');
       distSelect.innerHTML = '<option value="">-- ทั้งหมด --</option>'; 
-      
       data.dists.forEach(dist => {
-        let opt = document.createElement('option');
-        opt.value = dist; opt.text = dist;
-        distSelect.appendChild(opt);
+        distSelect.add(new Option(dist, dist));
       });
       fetchData(); 
     }
 
     function updateAreaDropdown() {
-      let distSelect = document.getElementById('distSelect').value;
+      let distVal = document.getElementById('distSelect').value;
       let areaSelect = document.getElementById('areaSelect');
-      areaSelect.innerHTML = '<option value="">-- ทั้งหมด (แสดงทุก AM) --</option>';
-      
-      if (distSelect && areaDataMapping[distSelect]) {
-        areaDataMapping[distSelect].forEach(area => {
-          let opt = document.createElement('option');
-          opt.value = area; opt.text = area;
-          areaSelect.appendChild(opt);
+      areaSelect.innerHTML = '<option value="">-- ทั้งหมด --</option>';
+      if (distVal && areaDataMapping[distVal]) {
+        areaDataMapping[distVal].forEach(area => {
+          areaSelect.add(new Option(area, area));
         });
       }
     }
@@ -174,16 +133,16 @@
       
       document.getElementById('loading').style.display = 'block';
       document.getElementById('tableBody').innerHTML = '';
-      document.querySelector('.table-card').style.display = 'none'; // ซ่อนตารางตอนโหลด
+      document.querySelector('.table-card').style.display = 'none';
 
       let url = `${APPS_SCRIPT_URL}?action=getTableData&dist=${encodeURIComponent(dist)}&area=${encodeURIComponent(area)}`;
 
       fetch(url)
-        .then(response => response.json())
+        .then(res => res.json())
         .then(data => renderTable(data))
-        .catch(error => {
+        .catch(err => {
           document.getElementById('loading').style.display = 'none';
-          document.getElementById('tableBody').innerHTML = '<tr><td colspan="7" class="text-center text-danger py-4">❌ ไม่สามารถเชื่อมต่อฐานข้อมูลได้</td></tr>';
+          document.getElementById('tableBody').innerHTML = '<tr><td colspan="3" class="text-center text-danger py-4">ไม่สามารถเชื่อมต่อฐานข้อมูลได้</td></tr>';
           document.querySelector('.table-card').style.display = 'block';
         });
     }
@@ -194,43 +153,45 @@
       let tbody = document.getElementById('tableBody');
       
       if(data.length === 0) {
-        tbody.innerHTML = '<tr><td colspan="7" class="text-center text-muted py-5"><i class="bi bi-inboxes display-4 d-block mb-2"></i> ไม่พบข้อมูลในระบบ</td></tr>';
+        tbody.innerHTML = '<tr><td colspan="3" class="text-center text-muted py-5"><i class="bi bi-inbox d-block fs-1"></i>ไม่มีข้อมูล</td></tr>';
         return;
       }
 
       let html = '';
       data.forEach(row => {
-        // Data Mapping: row[5]=TimeIn, row[6]=TimeOut, row[7]=StatusIn, row[8]=StatusOut
-        let timeInStr = row[5] ? row[5].substring(0, 5) : '-';  // ตัดวินาทีออกให้ดูสะอาดขึ้น
+        let timeInStr = row[5] ? row[5].substring(0, 5) : '-';
         let timeOutStr = row[6] ? row[6].substring(0, 5) : '-';
 
+        // จัดกลุ่มข้อมูลสาขาไว้ที่คอลัมน์แรกทั้งหมด
         html += `<tr>`;
-        html += `<td class="px-3 text-muted"><small>${row[0] || '-'}</small></td>`;
-        html += `<td class="text-muted"><small>${row[1] || '-'}</small></td>`;
-        html += `<td><span class="badge bg-light text-dark border">${row[2] || '-'}</span></td>`;
-        html += `<td class="fw-bold text-primary">${row[3] || '-'}</td>`;
-        html += `<td><small><i class="bi bi-calendar3"></i> ${row[4] || '-'}</small></td>`;
-        
-        // รวบเวลาและสถานะเข้าด้วยกัน เพื่อความประหยัดพื้นที่บนมือถือ
-        html += `<td class="text-center">
-                   <div class="fw-bold h6 mb-0">${timeInStr} น.</div>
-                   ${getBadge(row[7], 'เข้า')}
+        html += `<td>
+                   <div class="fw-bold text-primary store-title">${row[2]} ${row[3]}</div>
+                   <div class="store-meta">
+                     <span class="badge bg-light text-dark border p-1 me-1">${row[0]}</span><span class="badge bg-light text-dark border p-1">${row[1]}</span>
+                     <div class="mt-1"><i class="bi bi-calendar-event"></i> ${row[4]}</div>
+                   </div>
                  </td>`;
                  
-        html += `<td class="text-center">
-                   <div class="fw-bold h6 mb-0">${timeOutStr} น.</div>
-                   ${getBadge(row[8], 'ออก')}
+        // คอลัมน์ 2: เวลาเปิด
+        html += `<td class="text-center px-1">
+                   <div class="fw-bold time-text">${timeInStr}</div>
+                   ${getBadge(row[7])}
+                 </td>`;
+                 
+        // คอลัมน์ 3: เวลาปิด
+        html += `<td class="text-center px-1">
+                   <div class="fw-bold time-text">${timeOutStr}</div>
+                   ${getBadge(row[8])}
                  </td>`;
         html += `</tr>`;
       });
-      
       tbody.innerHTML = html;
     }
 
-    function getBadge(status, label) {
-      if(status === 'Red') return `<span class="badge bg-danger status-badge shadow-sm"><i class="bi bi-exclamation-triangle"></i> สาย (Red)</span>`;
-      if(status === 'Yellow') return `<span class="badge bg-warning text-dark status-badge shadow-sm"><i class="bi bi-exclamation-circle"></i> เสี่ยง (Yellow)</span>`;
-      if(status === 'Green') return `<span class="badge bg-success status-badge shadow-sm"><i class="bi bi-check-circle"></i> ปกติ (Green)</span>`;
+    function getBadge(status) {
+      if(status === 'Red') return `<span class="badge bg-danger status-badge shadow-sm">สาย</span>`;
+      if(status === 'Yellow') return `<span class="badge bg-warning text-dark status-badge shadow-sm">เสี่ยง</span>`;
+      if(status === 'Green') return `<span class="badge bg-success status-badge shadow-sm">ปกติ</span>`;
       return `<span class="badge bg-secondary status-badge opacity-50">-</span>`;
     }
   </script>
