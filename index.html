@@ -2,56 +2,121 @@
 <html lang="th">
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>ตรวจสอบเวลาเปิด-ปิดสาขา</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>Store Operation Monitor</title>
+  
   <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.5/font/bootstrap-icons.css" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Prompt:wght@300;400;600&display=swap" rel="stylesheet">
+  
   <style>
-    body { background-color: #f4f6f9; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; }
-    .status-badge { width: 80px; padding: 8px; font-weight: bold; }
+    :root {
+      --primary-color: #0d6efd;
+      --bg-color: #f4f7f6;
+    }
+    body { 
+      background-color: var(--bg-color); 
+      font-family: 'Prompt', sans-serif; /* ใช้ฟอนต์ Prompt ให้ดูทันสมัย */
+    }
+    /* ดีไซน์ส่วนหัว (Header) */
+    .app-header {
+      background: linear-gradient(135deg, #1e3c72 0%, #2a5298 100%);
+      color: white;
+      padding: 30px 0 50px 0;
+      border-radius: 0 0 20px 20px;
+      box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+    }
+    /* ดีไซน์กล่อง Filter ค้นหา */
+    .filter-card {
+      border-radius: 15px;
+      border: none;
+      box-shadow: 0 8px 20px rgba(0,0,0,0.08);
+      margin-top: -30px; /* ดึงขึ้นไปทับ Header เล็กน้อย */
+      position: relative;
+      z-index: 10;
+      background: white;
+    }
+    /* ดีไซน์ตาราง */
+    .table-card {
+      border-radius: 15px;
+      border: none;
+      box-shadow: 0 4px 10px rgba(0,0,0,0.05);
+      background: white;
+      overflow: hidden;
+    }
+    .table thead th {
+      background-color: #f8f9fa;
+      color: #495057;
+      font-weight: 600;
+      border-bottom: 2px solid #e9ecef;
+      white-space: nowrap; /* ไม่ให้หัวตารางตัดคำ */
+    }
+    .table tbody td {
+      vertical-align: middle;
+      white-space: nowrap; /* ป้องกันเนื้อหาตารางล้นบรรทัดในมือถือ */
+    }
+    .status-badge {
+      min-width: 85px;
+      padding: 6px 10px;
+      border-radius: 20px;
+      font-weight: 600;
+      font-size: 0.8rem;
+      display: inline-block;
+      margin-top: 4px;
+    }
+    /* แต่ง Select Dropdown */
+    .form-select { border-radius: 10px; border: 1px solid #ced4da; }
+    .form-select:focus { box-shadow: 0 0 0 0.25rem rgba(13, 110, 253, 0.15); border-color: #86b7fe; }
+    .btn-primary { border-radius: 10px; font-weight: 600; }
   </style>
 </head>
 <body>
-  <div class="container mt-4">
-    <h3 class="mb-4 text-primary text-center">⏱️ ระบบตรวจสอบเวลาเปิด-ปิดสาขา</h3>
-    
-    <div class="card p-3 mb-4 shadow-sm">
+
+  <div class="app-header text-center">
+    <h2 class="fw-bold mb-2"><i class="bi bi-shop"></i> ระบบตรวจสอบการเปิด-ปิดสาขา</h2>
+    <p class="text-white-50 mb-0">Monitor Store Operation Time</p>
+  </div>
+
+  <div class="container px-3 px-md-4">
+    <div class="card filter-card p-3 p-md-4 mb-4">
       <div class="row g-3 align-items-end">
         <div class="col-md-5">
-          <label class="form-label fw-bold">เลือก DistCode (DD)</label>
-          <select id="distSelect" class="form-select" onchange="updateAreaDropdown()">
-            <option value="">-- โหลดข้อมูล... --</option>
+          <label class="form-label text-muted fw-bold small"><i class="bi bi-geo-alt"></i> เลือก DistCode (DD)</label>
+          <select id="distSelect" class="form-select form-select-lg" onchange="updateAreaDropdown()">
+            <option value="">-- กำลังโหลดข้อมูล... --</option>
           </select>
         </div>
         <div class="col-md-5">
-          <label class="form-label fw-bold">เลือก AreaCode (AM)</label>
-          <select id="areaSelect" class="form-select">
+          <label class="form-label text-muted fw-bold small"><i class="bi bi-pin-map"></i> เลือก AreaCode (AM)</label>
+          <select id="areaSelect" class="form-select form-select-lg">
             <option value="">-- ทั้งหมด (แสดงทุก AM) --</option>
           </select>
         </div>
         <div class="col-md-2">
-          <button class="btn btn-primary w-100 fw-bold" onclick="fetchData()">ค้นหาข้อมูล</button>
+          <button class="btn btn-primary btn-lg w-100 shadow-sm" onclick="fetchData()">
+            <i class="bi bi-search"></i> ค้นหา
+          </button>
         </div>
       </div>
     </div>
 
-    <div id="loading" class="text-center my-4" style="display:none;">
-      <div class="spinner-border text-primary" role="status"></div>
-      <p class="mt-2 text-muted">กำลังโหลดข้อมูล...</p>
+    <div id="loading" class="text-center my-5" style="display:none;">
+      <div class="spinner-border text-primary" style="width: 3rem; height: 3rem;" role="status"></div>
+      <h5 class="mt-3 text-muted fw-bold">กำลังดึงข้อมูล...</h5>
     </div>
 
-    <div class="card shadow-sm">
-      <div class="card-body table-responsive">
-        <table class="table table-hover align-middle">
-          <thead class="table-dark">
+    <div class="card table-card mb-5">
+      <div class="card-body p-0 table-responsive">
+        <table class="table table-hover mb-0">
+          <thead>
             <tr>
-              <th>DD</th>
+              <th class="px-3">DD</th>
               <th>AM</th>
               <th>รหัสสาขา</th>
               <th>ชื่อสาขา</th>
               <th>วันที่</th>
-              <th>เวลาทำการ</th>
-              <th class="text-center">สถานะเปิดร้าน</th>
-              <th class="text-center">สถานะปิดร้าน</th>
+              <th class="text-center">เวลาเข้า (เปิดร้าน)</th>
+              <th class="text-center">เวลาออก (ปิดร้าน)</th>
             </tr>
           </thead>
           <tbody id="tableBody">
@@ -62,115 +127,111 @@
   </div>
 
   <script>
-    // URL ของ Google Apps Script ที่คุณให้มา
+    // ⚠️ นำ URL ของ Google Apps Script มาใส่ตรงนี้
     const APPS_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbyNv8_4WfAFO5B3wcfxBWTNgHKhjSQid3r4jZfCVT2RKqAcVCDN_71neLwIg8opDxjB/exec";
     
     let areaDataMapping = {};
 
-    // 1. โหลดข้อมูล Dropdown ทันทีเมื่อเปิดเว็บ
     window.onload = function() {
-      document.getElementById('distSelect').innerHTML = '<option value="">-- กำลังเชื่อมต่อฐานข้อมูล... --</option>';
-      
       fetch(APPS_SCRIPT_URL + "?action=getDropdown")
         .then(response => response.json())
-        .then(data => {
-          populateDropdowns(data);
-        })
+        .then(data => populateDropdowns(data))
         .catch(error => {
-          console.error("Error:", error);
-          document.getElementById('distSelect').innerHTML = '<option value="">เกิดข้อผิดพลาดในการโหลด</option>';
+          document.getElementById('distSelect').innerHTML = '<option value="">❌ โหลดข้อมูลล้มเหลว</option>';
         });
     };
 
     function populateDropdowns(data) {
       areaDataMapping = data.mapping;
       let distSelect = document.getElementById('distSelect');
-      
-      distSelect.innerHTML = '<option value="">-- ทั้งหมด --</option>'; // รีเซ็ตค่าเริ่มต้น
+      distSelect.innerHTML = '<option value="">-- ทั้งหมด --</option>'; 
       
       data.dists.forEach(dist => {
         let opt = document.createElement('option');
-        opt.value = dist;
-        opt.text = dist;
+        opt.value = dist; opt.text = dist;
         distSelect.appendChild(opt);
       });
-      
-      fetchData(); // สั่งให้โหลดข้อมูลทั้งหมดครั้งแรกเลย
+      fetchData(); 
     }
 
-    // 2. อัปเดต AM ตาม DD ที่เลือก
     function updateAreaDropdown() {
       let distSelect = document.getElementById('distSelect').value;
       let areaSelect = document.getElementById('areaSelect');
-      
       areaSelect.innerHTML = '<option value="">-- ทั้งหมด (แสดงทุก AM) --</option>';
       
       if (distSelect && areaDataMapping[distSelect]) {
         areaDataMapping[distSelect].forEach(area => {
           let opt = document.createElement('option');
-          opt.value = area;
-          opt.text = area;
+          opt.value = area; opt.text = area;
           areaSelect.appendChild(opt);
         });
       }
     }
 
-    // 3. ฟังก์ชันดึงข้อมูลตารางเมื่อกดปุ่มค้นหา
     function fetchData() {
       let dist = document.getElementById('distSelect').value;
       let area = document.getElementById('areaSelect').value;
       
       document.getElementById('loading').style.display = 'block';
       document.getElementById('tableBody').innerHTML = '';
+      document.querySelector('.table-card').style.display = 'none'; // ซ่อนตารางตอนโหลด
 
-      // สร้าง URL สำหรับเรียกดูข้อมูล
       let url = `${APPS_SCRIPT_URL}?action=getTableData&dist=${encodeURIComponent(dist)}&area=${encodeURIComponent(area)}`;
 
       fetch(url)
         .then(response => response.json())
-        .then(data => {
-          renderTable(data);
-        })
+        .then(data => renderTable(data))
         .catch(error => {
-          console.error("Error fetching data:", error);
           document.getElementById('loading').style.display = 'none';
-          document.getElementById('tableBody').innerHTML = '<tr><td colspan="8" class="text-center text-danger">ไม่สามารถโหลดข้อมูลได้ กรุณาลองใหม่</td></tr>';
+          document.getElementById('tableBody').innerHTML = '<tr><td colspan="7" class="text-center text-danger py-4">❌ ไม่สามารถเชื่อมต่อฐานข้อมูลได้</td></tr>';
+          document.querySelector('.table-card').style.display = 'block';
         });
     }
 
-    // 4. วาดตาราง
     function renderTable(data) {
       document.getElementById('loading').style.display = 'none';
+      document.querySelector('.table-card').style.display = 'block';
       let tbody = document.getElementById('tableBody');
       
       if(data.length === 0) {
-        tbody.innerHTML = '<tr><td colspan="8" class="text-center text-danger">ไม่พบข้อมูล</td></tr>';
+        tbody.innerHTML = '<tr><td colspan="7" class="text-center text-muted py-5"><i class="bi bi-inboxes display-4 d-block mb-2"></i> ไม่พบข้อมูลในระบบ</td></tr>';
         return;
       }
 
       let html = '';
       data.forEach(row => {
-        html += '<tr>';
-        html += `<td><small>${row[0] || '-'}</small></td>`;
-        html += `<td><small>${row[1] || '-'}</small></td>`;
-        html += `<td><b>${row[2] || '-'}</b></td>`;
-        html += `<td>${row[3] || '-'}</td>`;
-        html += `<td>${row[4] || '-'}</td>`;
-        html += `<td>${row[5] || '-'}</td>`;
-        html += `<td class="text-center">${getBadge(row[6])}</td>`;
-        html += `<td class="text-center">${getBadge(row[7])}</td>`;
-        html += '</tr>';
+        // Data Mapping: row[5]=TimeIn, row[6]=TimeOut, row[7]=StatusIn, row[8]=StatusOut
+        let timeInStr = row[5] ? row[5].substring(0, 5) : '-';  // ตัดวินาทีออกให้ดูสะอาดขึ้น
+        let timeOutStr = row[6] ? row[6].substring(0, 5) : '-';
+
+        html += `<tr>`;
+        html += `<td class="px-3 text-muted"><small>${row[0] || '-'}</small></td>`;
+        html += `<td class="text-muted"><small>${row[1] || '-'}</small></td>`;
+        html += `<td><span class="badge bg-light text-dark border">${row[2] || '-'}</span></td>`;
+        html += `<td class="fw-bold text-primary">${row[3] || '-'}</td>`;
+        html += `<td><small><i class="bi bi-calendar3"></i> ${row[4] || '-'}</small></td>`;
+        
+        // รวบเวลาและสถานะเข้าด้วยกัน เพื่อความประหยัดพื้นที่บนมือถือ
+        html += `<td class="text-center">
+                   <div class="fw-bold h6 mb-0">${timeInStr} น.</div>
+                   ${getBadge(row[7], 'เข้า')}
+                 </td>`;
+                 
+        html += `<td class="text-center">
+                   <div class="fw-bold h6 mb-0">${timeOutStr} น.</div>
+                   ${getBadge(row[8], 'ออก')}
+                 </td>`;
+        html += `</tr>`;
       });
       
       tbody.innerHTML = html;
     }
 
-    // ฟังก์ชันสร้างป้ายสี
-    function getBadge(status) {
-      if(status === 'Red') return '<span class="badge bg-danger status-badge">สาย (Red)</span>';
-      if(status === 'Yellow') return '<span class="badge bg-warning text-dark status-badge">เสี่ยง (Yellow)</span>';
-      if(status === 'Green') return '<span class="badge bg-success status-badge">ตรงเวลา (Green)</span>';
-      return `<span class="badge bg-secondary status-badge">${status || '-'}</span>`;
+    function getBadge(status, label) {
+      if(status === 'Red') return `<span class="badge bg-danger status-badge shadow-sm"><i class="bi bi-exclamation-triangle"></i> สาย (Red)</span>`;
+      if(status === 'Yellow') return `<span class="badge bg-warning text-dark status-badge shadow-sm"><i class="bi bi-exclamation-circle"></i> เสี่ยง (Yellow)</span>`;
+      if(status === 'Green') return `<span class="badge bg-success status-badge shadow-sm"><i class="bi bi-check-circle"></i> ปกติ (Green)</span>`;
+      return `<span class="badge bg-secondary status-badge opacity-50">-</span>`;
     }
   </script>
 </body>
