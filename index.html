@@ -24,23 +24,19 @@
       margin-top: -30px; position: relative; z-index: 10; background: white;
     }
     
-    /* สไตล์สำหรับการ์ดสาขา */
     .store-card {
       border-radius: 16px; border: none; box-shadow: 0 4px 12px rgba(0,0,0,0.05);
       transition: transform 0.2s; margin-bottom: 15px; 
     }
     .store-card:active { transform: scale(0.98); }
-    
-    /* 🎨 สลับสีพื้นหลังการ์ดให้อ่านง่าย */
-    .store-card:nth-child(odd) { background-color: #ffffff; }          /* กล่องคี่ สีขาว */
-    .store-card:nth-child(even) { background-color: #f0f7ff; }         /* กล่องคู่ สีฟ้าอ่อนมากๆ */
+    .store-card:nth-child(odd) { background-color: #ffffff; }          
+    .store-card:nth-child(even) { background-color: #f0f7ff; }         
     
     .store-title { font-size: 1.05rem; line-height: 1.3; margin-bottom: 0px; }
     .time-box { background-color: rgba(255, 255, 255, 0.6); border-radius: 12px; padding: 10px; border: 1px solid #e9ecef;}
     .time-text { font-size: 1.15rem; letter-spacing: -0.5px; margin-top: 2px; margin-bottom: 4px; }
     
     .status-badge { font-size: 0.75rem; padding: 5px 0; border-radius: 8px; width: 100%; display: block; }
-    
     .form-select, .btn { border-radius: 10px; font-size: 0.9rem; }
   </style>
 </head>
@@ -61,14 +57,20 @@
         </div>
         <div class="col-6">
           <label class="form-label text-muted fw-bold mb-1" style="font-size: 0.8rem;">รหัส DD</label>
-          <select id="distSelect" class="form-select" onchange="updateAreaDropdown()">
+          <select id="distSelect" class="form-select" onchange="updateFilters()">
             <option value="">-- โหลด... --</option>
           </select>
         </div>
         <div class="col-6">
           <label class="form-label text-muted fw-bold mb-1" style="font-size: 0.8rem;">รหัส AM</label>
-          <select id="areaSelect" class="form-select">
+          <select id="areaSelect" class="form-select" onchange="updateFilters()">
             <option value="">-- ทั้งหมด --</option>
+          </select>
+        </div>
+        <div class="col-12 mt-2">
+          <label class="form-label text-muted fw-bold mb-1" style="font-size: 0.8rem;"><i class="bi bi-shop"></i> รหัส/ชื่อสาขา</label>
+          <select id="storeSelect" class="form-select">
+            <option value="">-- สาขาทั้งหมด --</option>
           </select>
         </div>
         <div class="col-12 mt-3">
@@ -84,70 +86,93 @@
       <p class="mt-2 text-muted fw-bold">กำลังดึงข้อมูล...</p>
     </div>
 
-    <div id="cardContainer" class="pb-4">
-      </div>
+    <div id="cardContainer" class="pb-4"></div>
   </div>
 
   <script>
     // ⚠️ นำ URL ของ Google Apps Script มาใส่ที่นี่
     const APPS_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbyNv8_4WfAFO5B3wcfxBWTNgHKhjSQid3r4jZfCVT2RKqAcVCDN_71neLwIg8opDxjB/exec";
+    
     let areaDataMapping = {};
+    let allStoresData = []; // เก็บรายชื่อสาขาทั้งหมด
 
     window.onload = function() {
       fetch(APPS_SCRIPT_URL + "?action=getDropdown")
         .then(res => res.json())
         .then(data => populateDropdowns(data))
-        .catch(err => {
-          document.getElementById('distSelect').innerHTML = '<option value="">❌ Error</option>';
-          document.getElementById('dateSelect').innerHTML = '<option value="">❌ Error</option>';
-        });
+        .catch(err => console.error(err));
     };
 
     function populateDropdowns(data) {
       areaDataMapping = data.mapping;
+      allStoresData = data.stores; 
       
-      // การตั้งค่า Dropdown วันที่ (แสดงผลเป็น DD/MM/YYYY แต่อ้างอิงค้นหาด้วย YYYY-MM-DD)
       let dateSelect = document.getElementById('dateSelect');
       dateSelect.innerHTML = '<option value="">-- ทุกวันที่ --</option>'; 
-      data.dates.forEach(d => {
-        // d.text = "19/03/2026", d.value = "2026-03-19"
-        dateSelect.add(new Option(d.text, d.value)); 
-      });
+      data.dates.forEach(d => dateSelect.add(new Option(d.text, d.value)));
       if(data.dates.length > 0) dateSelect.value = data.dates[0].value; 
 
-      // ใส่ข้อมูล DD
       let distSelect = document.getElementById('distSelect');
       distSelect.innerHTML = '<option value="">-- ทั้งหมด --</option>'; 
       data.dists.forEach(dist => distSelect.add(new Option(dist, dist)));
       
+      updateFilters(); // วาด Dropdown AM และ Store
       fetchData(); 
     }
 
-    function updateAreaDropdown() {
+    // ฟังก์ชันนี้จะกรองทั้ง AM และ สาขา ให้ตรงกับ DD ที่เลือก
+    function updateFilters() {
       let distVal = document.getElementById('distSelect').value;
+      
       let areaSelect = document.getElementById('areaSelect');
+      let currentArea = areaSelect.value;
       areaSelect.innerHTML = '<option value="">-- ทั้งหมด --</option>';
       if (distVal && areaDataMapping[distVal]) {
-        areaDataMapping[distVal].forEach(area => areaSelect.add(new Option(area, area)));
+        areaDataMapping[distVal].forEach(area => {
+          let opt = new Option(area, area);
+          if(area === currentArea) opt.selected = true;
+          areaSelect.add(opt);
+        });
       }
+      
+      let updatedArea = areaSelect.value;
+
+      // กรองสาขา
+      let storeSelect = document.getElementById('storeSelect');
+      let currentStore = storeSelect.value;
+      storeSelect.innerHTML = '<option value="">-- สาขาทั้งหมด --</option>';
+      
+      let filteredStores = allStoresData.filter(s => {
+         let matchDist = distVal ? s.dist === distVal : true;
+         let matchArea = updatedArea ? s.area === updatedArea : true;
+         return matchDist && matchArea;
+      });
+
+      filteredStores.forEach(s => {
+         let text = `${s.code} ${s.name}`; // รูปแบบ: 0103 Wat Ampawa
+         let opt = new Option(text, s.code);
+         if(s.code === currentStore) opt.selected = true;
+         storeSelect.add(opt);
+      });
     }
 
     function fetchData() {
       let dist = document.getElementById('distSelect').value;
       let area = document.getElementById('areaSelect').value;
       let date = document.getElementById('dateSelect').value;
+      let store = document.getElementById('storeSelect').value; // ดึงค่าสาขา
       
       document.getElementById('loading').style.display = 'block';
       document.getElementById('cardContainer').innerHTML = '';
 
-      let url = `${APPS_SCRIPT_URL}?action=getTableData&dist=${encodeURIComponent(dist)}&area=${encodeURIComponent(area)}&date=${encodeURIComponent(date)}`;
+      let url = `${APPS_SCRIPT_URL}?action=getTableData&dist=${encodeURIComponent(dist)}&area=${encodeURIComponent(area)}&date=${encodeURIComponent(date)}&store=${encodeURIComponent(store)}`;
 
       fetch(url)
         .then(res => res.json())
         .then(data => renderCards(data))
         .catch(err => {
           document.getElementById('loading').style.display = 'none';
-          document.getElementById('cardContainer').innerHTML = '<div class="alert alert-danger text-center">ไม่สามารถเชื่อมต่อฐานข้อมูลได้</div>';
+          document.getElementById('cardContainer').innerHTML = '<div class="alert alert-danger text-center">ไม่สามารถเชื่อมต่อได้</div>';
         });
     }
 
@@ -161,11 +186,10 @@
       }
 
       let html = '';
-      data.forEach((row, index) => {
+      data.forEach(row => {
         let timeInStr = row[5] ? row[5].substring(0, 5) : '-';
         let timeOutStr = row[6] ? row[6].substring(0, 5) : '-';
 
-        // เอารายละเอียด DD และ AM ออกจากการ์ดตามที่ขอ เพื่อความสะอาดตา
         html += `
         <div class="store-card card p-3">
           <div class="d-flex justify-content-between align-items-center mb-3">
