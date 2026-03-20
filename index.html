@@ -24,13 +24,26 @@
       margin-top: -30px; position: relative; z-index: 10; background: white;
     }
     
+    /* อัปเดต CSS การ์ดที่นี่ */
     .store-card {
-      border-radius: 16px; border: none; box-shadow: 0 4px 12px rgba(0,0,0,0.05);
-      transition: transform 0.2s; margin-bottom: 15px; 
+      border-radius: 16px; 
+      border: 1px solid #e2e8f0; /* กรอบสีเทาอ่อนให้เห็นขอบเขต */
+      box-shadow: 0 6px 15px rgba(0,0,0,0.06); /* เงาให้การ์ดดูลอยขึ้น */
+      transition: all 0.2s ease; 
+      margin-bottom: 20px; /* ระยะห่างระหว่างการ์ด */
+      position: relative;
     }
     .store-card:active { transform: scale(0.98); }
-    .store-card:nth-child(odd) { background-color: #ffffff; }          
-    .store-card:nth-child(even) { background-color: #f0f7ff; }         
+    
+    /* ปรับสีพื้นหลังสลับ และเพิ่มแถบสีด้านซ้าย */
+    .store-card:nth-child(odd) { 
+      background-color: #ffffff; 
+      border-left: 6px solid #2c5364; /* แถบสีเข้ม */
+    }          
+    .store-card:nth-child(even) { 
+      background-color: #f4f9ff; 
+      border-left: 6px solid #6ab0e6; /* แถบสีอ่อน */
+    }         
     
     .store-title { font-size: 1.05rem; line-height: 1.3; margin-bottom: 0px; }
     .time-box { background-color: rgba(255, 255, 255, 0.6); border-radius: 12px; padding: 10px; border: 1px solid #e9ecef;}
@@ -90,11 +103,11 @@
   </div>
 
   <script>
-    // ⚠️ นำ URL ของ Google Apps Script มาใส่ที่นี่
+    // ⚠️ อย่าลืมเช็ค URL ของ Web App ให้ตรงกับของคุณนะครับ
     const APPS_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbyNv8_4WfAFO5B3wcfxBWTNgHKhjSQid3r4jZfCVT2RKqAcVCDN_71neLwIg8opDxjB/exec";
     
     let areaDataMapping = {};
-    let allStoresData = []; // เก็บรายชื่อสาขาทั้งหมด
+    let allStoresData = []; 
 
     window.onload = function() {
       fetch(APPS_SCRIPT_URL + "?action=getDropdown")
@@ -116,11 +129,10 @@
       distSelect.innerHTML = '<option value="">-- ทั้งหมด --</option>'; 
       data.dists.forEach(dist => distSelect.add(new Option(dist, dist)));
       
-      updateFilters(); // วาด Dropdown AM และ Store
+      updateFilters(); 
       fetchData(); 
     }
 
-    // ฟังก์ชันนี้จะกรองทั้ง AM และ สาขา ให้ตรงกับ DD ที่เลือก
     function updateFilters() {
       let distVal = document.getElementById('distSelect').value;
       
@@ -137,7 +149,6 @@
       
       let updatedArea = areaSelect.value;
 
-      // กรองสาขา
       let storeSelect = document.getElementById('storeSelect');
       let currentStore = storeSelect.value;
       storeSelect.innerHTML = '<option value="">-- สาขาทั้งหมด --</option>';
@@ -149,7 +160,7 @@
       });
 
       filteredStores.forEach(s => {
-         let text = `${s.code} ${s.name}`; // รูปแบบ: 0103 Wat Ampawa
+         let text = `${s.code} ${s.name}`; 
          let opt = new Option(text, s.code);
          if(s.code === currentStore) opt.selected = true;
          storeSelect.add(opt);
@@ -160,7 +171,7 @@
       let dist = document.getElementById('distSelect').value;
       let area = document.getElementById('areaSelect').value;
       let date = document.getElementById('dateSelect').value;
-      let store = document.getElementById('storeSelect').value; // ดึงค่าสาขา
+      let store = document.getElementById('storeSelect').value; 
       
       document.getElementById('loading').style.display = 'block';
       document.getElementById('cardContainer').innerHTML = '';
