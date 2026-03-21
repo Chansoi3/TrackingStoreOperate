@@ -9,6 +9,8 @@
   <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.5/font/bootstrap-icons.css" rel="stylesheet">
   <link href="https://fonts.googleapis.com/css2?family=Prompt:wght@300;400;600&display=swap" rel="stylesheet">
   
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+
   <style>
     :root { var(--bg-color): #f0f2f5; }
     body { background-color: var(--bg-color); font-family: 'Prompt', sans-serif; }
@@ -24,35 +26,42 @@
       margin-top: -30px; position: relative; z-index: 10; background: white;
     }
     
-    /* การ์ดข้อมูลร้านค้า */
+    /* การ์ดที่สามารถกดได้ (Clickable Card) */
     .store-card {
       border-radius: 16px; border: 1px solid #e2e8f0; 
       box-shadow: 0 6px 15px rgba(0,0,0,0.06); transition: all 0.2s ease; 
-      margin-bottom: 20px; position: relative;
+      margin-bottom: 20px; position: relative; cursor: pointer;
     }
+    .store-card:hover { transform: translateY(-3px); box-shadow: 0 10px 25px rgba(0,0,0,0.1); }
     .store-card:active { transform: scale(0.98); }
     .store-card:nth-child(odd) { background-color: #ffffff; border-left: 6px solid #2c5364; }          
     .store-card:nth-child(even) { background-color: #f4f9ff; border-left: 6px solid #6ab0e6; }         
     
     .store-title { font-size: 1.05rem; line-height: 1.3; margin-bottom: 0px; }
-    .time-box, .sales-box { background-color: rgba(255, 255, 255, 0.6); border-radius: 12px; padding: 10px; border: 1px solid #e9ecef;}
+    .time-box { background-color: rgba(255, 255, 255, 0.6); border-radius: 12px; padding: 10px; border: 1px solid #e9ecef;}
     .time-text { font-size: 1.15rem; letter-spacing: -0.5px; margin-top: 2px; margin-bottom: 4px; }
-    .sales-text { font-size: 1.1rem; letter-spacing: 0; margin-top: 2px; margin-bottom: 4px; color: #1e293b; }
     
-    .status-badge { font-size: 0.75rem; padding: 5px 0; border-radius: 8px; width: 100%; display: block; }
     .form-select, .btn { border-radius: 10px; font-size: 0.9rem; }
-    .btn-group .btn { font-size: 0.85rem; padding: 8px 0; font-weight: 600;}
-
-    /* ปุ่มเมนูหลัก */
+    
     .menu-btn {
       border-radius: 16px; padding: 25px 15px; background: white;
       border: 1px solid #e2e8f0; box-shadow: 0 8px 20px rgba(0,0,0,0.05);
       text-align: center; color: #2c5364; text-decoration: none; display: block;
       transition: all 0.2s ease;
     }
-    .menu-btn:hover, .menu-btn:active { background: #f8fafc; transform: translateY(-3px); box-shadow: 0 12px 25px rgba(0,0,0,0.1); }
+    .menu-btn:hover { background: #f8fafc; transform: translateY(-3px); box-shadow: 0 12px 25px rgba(0,0,0,0.1); }
     .menu-icon { font-size: 2.5rem; margin-bottom: 10px; color: #3b82f6; }
     .back-btn { position: absolute; top: 15px; left: 15px; color: white; font-size: 1.5rem; text-decoration: none; }
+
+    /* CSS สำหรับการ์ดยอดขายและป๊อปอัป */
+    .sales-block { font-size: 0.85rem; padding-left: 12px; line-height: 1.45; border-left: 2px solid #e9ecef; margin-top: 5px; }
+    .val-ty { font-weight: 600; color: #1e293b; }
+    .val-diff-up { color: #16a34a; font-weight: 600;}
+    .val-diff-down { color: #dc2626; font-weight: 600;}
+    
+    .modal-content { border-radius: 16px; border: none; }
+    .modal-header { background: #f8fafc; border-radius: 16px 16px 0 0; }
+    .modal-subtext { font-size: 0.8rem; color: #64748b; }
   </style>
 </head>
 <body>
@@ -68,14 +77,12 @@
       <div class="row g-3">
         <div class="col-6">
           <a href="#" class="menu-btn" onclick="showPage('sales')">
-            <i class="bi bi-graph-up-arrow menu-icon text-success"></i>
-            <h6 class="fw-bold mb-0">เช็คยอดขาย</h6>
+            <i class="bi bi-graph-up-arrow menu-icon text-success"></i><h6 class="fw-bold mb-0">เช็คยอดขาย</h6>
           </a>
         </div>
         <div class="col-6">
           <a href="#" class="menu-btn" onclick="showPage('time')">
-            <i class="bi bi-clock-history menu-icon text-primary"></i>
-            <h6 class="fw-bold mb-0">เช็คเปิด-ปิดร้าน</h6>
+            <i class="bi bi-clock-history menu-icon text-primary"></i><h6 class="fw-bold mb-0">เช็คเปิด-ปิดร้าน</h6>
           </a>
         </div>
       </div>
@@ -84,41 +91,13 @@
     <div id="pageTime" style="display: none;">
       <div class="card filter-card p-3 mb-3 mx-auto">
         <div class="row g-2 align-items-end">
-          <div class="col-12">
-            <label class="form-label text-muted fw-bold mb-1" style="font-size: 0.8rem;"><i class="bi bi-calendar-event"></i> เลือกวันที่ (DD/MM/YYYY)</label>
-            <select id="timeDateSelect" class="form-select"><option value="">-- โหลดข้อมูล... --</option></select>
-          </div>
-          <div class="col-6">
-            <label class="form-label text-muted fw-bold mb-1" style="font-size: 0.8rem;">รหัส DD</label>
-            <select id="timeDistSelect" class="form-select" onchange="updateTimeFilters()"></select>
-          </div>
-          <div class="col-6">
-            <label class="form-label text-muted fw-bold mb-1" style="font-size: 0.8rem;">รหัส AM</label>
-            <select id="timeAreaSelect" class="form-select" onchange="updateTimeFilters()"><option value="">-- ทั้งหมด --</option></select>
-          </div>
-          <div class="col-12 mt-2">
-            <label class="form-label text-muted fw-bold mb-1" style="font-size: 0.8rem;"><i class="bi bi-shop"></i> รหัส/ชื่อสาขา</label>
-            <select id="timeStoreSelect" class="form-select"><option value="">-- สาขาทั้งหมด --</option></select>
-          </div>
-          <div class="col-12 mt-3">
-            <button class="btn btn-primary w-100 fw-bold py-2 shadow-sm" onclick="fetchTimeData()"><i class="bi bi-search"></i> ค้นหาข้อมูล</button>
-          </div>
+          <div class="col-12"><label class="form-label text-muted fw-bold mb-1" style="font-size: 0.8rem;">วันที่</label><select id="timeDateSelect" class="form-select"></select></div>
+          <div class="col-6"><label class="form-label text-muted fw-bold mb-1" style="font-size: 0.8rem;">รหัส DD</label><select id="timeDistSelect" class="form-select" onchange="updateTimeFilters()"></select></div>
+          <div class="col-6"><label class="form-label text-muted fw-bold mb-1" style="font-size: 0.8rem;">รหัส AM</label><select id="timeAreaSelect" class="form-select" onchange="updateTimeFilters()"><option value="">-- ทั้งหมด --</option></select></div>
+          <div class="col-12 mt-2"><label class="form-label text-muted fw-bold mb-1" style="font-size: 0.8rem;">รหัส/ชื่อสาขา</label><select id="timeStoreSelect" class="form-select"><option value="">-- สาขาทั้งหมด --</option></select></div>
+          <div class="col-12 mt-3"><button class="btn btn-primary w-100 fw-bold py-2 shadow-sm" onclick="fetchTimeData()"><i class="bi bi-search"></i> ค้นหาข้อมูล</button></div>
         </div>
       </div>
-
-      <div class="row px-1 mb-4" id="statusFilterContainer" style="display: none;">
-        <div class="col-12">
-          <div class="btn-group w-100 shadow-sm" role="group">
-            <input type="radio" class="btn-check" name="statusFilter" id="filterAll" value="All" checked onchange="applyTimeStatusFilter()">
-            <label class="btn btn-outline-primary" for="filterAll">ทั้งหมด</label>
-            <input type="radio" class="btn-check" name="statusFilter" id="filterLateOpen" value="LateOpen" onchange="applyTimeStatusFilter()">
-            <label class="btn btn-outline-danger" for="filterLateOpen">เปิดสาย</label>
-            <input type="radio" class="btn-check" name="statusFilter" id="filterLateClose" value="LateClose" onchange="applyTimeStatusFilter()">
-            <label class="btn btn-outline-warning" for="filterLateClose">ปิดช้า</label>
-          </div>
-        </div>
-      </div>
-
       <div id="timeCardContainer" class="pb-4"></div>
     </div>
 
@@ -126,12 +105,12 @@
       <div class="card filter-card p-3 mb-4 mx-auto">
         <div class="row g-2 align-items-end">
           <div class="col-6">
-            <label class="form-label text-muted fw-bold mb-1" style="font-size: 0.8rem;">รหัส DM</label>
-            <select id="salesDMSelect" class="form-select" onchange="updateSalesFilters()"><option value="">-- โหลด... --</option></select>
+            <label class="form-label text-muted fw-bold mb-1" style="font-size: 0.8rem;">รหัส RM</label>
+            <select id="salesRMSelect" class="form-select" onchange="updateSalesFilters()"><option value="">-- โหลด... --</option></select>
           </div>
           <div class="col-6">
-            <label class="form-label text-muted fw-bold mb-1" style="font-size: 0.8rem;">รหัส RM</label>
-            <select id="salesRMSelect" class="form-select" onchange="updateSalesFilters()"><option value="">-- ทั้งหมด --</option></select>
+            <label class="form-label text-muted fw-bold mb-1" style="font-size: 0.8rem;">รหัส AM / DM</label>
+            <select id="salesDMSelect" class="form-select" onchange="updateSalesFilters()"><option value="">-- ทั้งหมด --</option></select>
           </div>
           <div class="col-12 mt-2">
             <label class="form-label text-muted fw-bold mb-1" style="font-size: 0.8rem;"><i class="bi bi-shop"></i> รหัส/ชื่อสาขา</label>
@@ -142,27 +121,41 @@
           </div>
         </div>
       </div>
-      
       <div id="salesCardContainer" class="pb-4"></div>
     </div>
 
-    <div id="loading" class="text-center my-5" style="display:none;">
-      <div class="spinner-border text-primary" role="status"></div>
-      <p class="mt-2 text-muted fw-bold">กำลังดึงข้อมูล...</p>
-    </div>
+    <div id="loading" class="text-center my-5" style="display:none;"><div class="spinner-border text-primary" role="status"></div><p class="mt-2 text-muted fw-bold">กำลังดึงข้อมูล...</p></div>
+  </div>
 
+  <div class="modal fade" id="storeModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered modal-dialog-scrollable">
+      <div class="modal-content">
+        <div class="modal-header">
+          <div>
+            <h5 class="modal-title fw-bold text-success" id="modalStoreName">Store Name</h5>
+            <div class="modal-subtext" id="modalStoreInfo">RM: - | DM: -</div>
+          </div>
+          <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+        </div>
+        <div class="modal-body" id="modalBodyContent" style="background-color: #f8fafc;">
+          </div>
+      </div>
+    </div>
   </div>
 
   <script>
-    // ⚠️ นำ URL ของ Google Apps Script มาใส่ที่นี่ (ต้อง Deploy ใหม่ด้วยนะครับ)
     const APPS_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbyNv8_4WfAFO5B3wcfxBWTNgHKhjSQid3r4jZfCVT2RKqAcVCDN_71neLwIg8opDxjB/exec";
     
-    // ตัวแปรเก็บข้อมูล
     let timeDataMapping = {}, timeAllStores = [], currentTimeData = [];
-    let salesDataMapping = {}, salesAllStores = [], currentSalesData = [];
+    let salesDataMapping = {}, salesAllStores = [], currentSalesDataList = [], currentHeaderDate = "MTD";
     let isTimeLoaded = false, isSalesLoaded = false;
+    let detailsModal; // ตัวแปรเก็บ Modal
 
-    // ระบบสลับหน้า
+    window.onload = function() {
+      detailsModal = new bootstrap.Modal(document.getElementById('storeModal'));
+    }
+
+    // ระบบจัดการหน้าจอ
     function showPage(page) {
       document.getElementById('pageHome').style.display = 'none';
       document.getElementById('pageTime').style.display = 'none';
@@ -186,19 +179,16 @@
       }
     }
 
-    // ================= โหมด Time =================
+    // ================= โหมด Time (คงเดิม) =================
     function loadTimeDropdowns() {
       showLoading(true);
       fetch(APPS_SCRIPT_URL + "?action=getDropdown").then(res => res.json()).then(data => {
         timeDataMapping = data.mapping; timeAllStores = data.stores;
-        
         let dSel = document.getElementById('timeDateSelect'); dSel.innerHTML = '<option value="">-- ทุกวันที่ --</option>';
         data.dates.forEach(d => dSel.add(new Option(d.text, d.value)));
         if(data.dates.length > 0) dSel.value = data.dates[0].value;
-
         let distSel = document.getElementById('timeDistSelect'); distSel.innerHTML = '<option value="">-- ทั้งหมด --</option>';
         data.dists.forEach(d => distSel.add(new Option(d, d)));
-        
         updateTimeFilters(); showLoading(false); isTimeLoaded = true;
       });
     }
@@ -208,7 +198,6 @@
       let aSel = document.getElementById('timeAreaSelect'); let curA = aSel.value;
       aSel.innerHTML = '<option value="">-- ทั้งหมด --</option>';
       if (dist && timeDataMapping[dist]) timeDataMapping[dist].forEach(a => { let o = new Option(a, a); if(a===curA) o.selected=true; aSel.add(o); });
-      
       let sSel = document.getElementById('timeStoreSelect'); let curS = sSel.value;
       sSel.innerHTML = '<option value="">-- สาขาทั้งหมด --</option>';
       timeAllStores.filter(s => (!dist || s.dist===dist) && (!aSel.value || s.area===aSel.value)).forEach(s => {
@@ -218,96 +207,127 @@
 
     function fetchTimeData() {
       showLoading(true); document.getElementById('timeCardContainer').innerHTML = '';
-      document.getElementById('statusFilterContainer').style.display = 'none';
       let url = `${APPS_SCRIPT_URL}?action=getTableData&dist=${encodeURIComponent(document.getElementById('timeDistSelect').value)}&area=${encodeURIComponent(document.getElementById('timeAreaSelect').value)}&date=${encodeURIComponent(document.getElementById('timeDateSelect').value)}&store=${encodeURIComponent(document.getElementById('timeStoreSelect').value)}`;
-      
       fetch(url).then(res => res.json()).then(data => {
-        currentTimeData = data; document.getElementById('statusFilterContainer').style.display = 'block';
-        applyTimeStatusFilter(); showLoading(false);
+        let html = data.length ? '' : '<div class="text-center text-muted py-5"><i class="bi bi-inbox d-block fs-1"></i>ไม่พบข้อมูลในระบบ</div>';
+        data.forEach(row => {
+          html += `<div class="store-card card p-3"><div class="d-flex justify-content-between align-items-center mb-3"><h6 class="store-title fw-bold text-primary">${row[2]} ${row[3]}</h6><span class="badge bg-secondary opacity-75"><i class="bi bi-calendar3"></i> ${row[4]}</span></div><div class="row g-2 text-center mt-1"><div class="col-6"><div class="time-box"><small class="text-muted d-block fw-bold" style="font-size: 0.75rem;">เวลาเข้าร้าน</small><div class="fw-bold time-text text-dark">${row[5]?row[5].substring(0,5):'-'} น.</div></div></div><div class="col-6"><div class="time-box"><small class="text-muted d-block fw-bold" style="font-size: 0.75rem;">เวลาออกร้าน</small><div class="fw-bold time-text text-dark">${row[6]?row[6].substring(0,5):'-'} น.</div></div></div></div></div>`;
+        });
+        document.getElementById('timeCardContainer').innerHTML = html; showLoading(false);
       });
     }
 
-    function applyTimeStatusFilter() {
-      let type = document.querySelector('input[name="statusFilter"]:checked').value;
-      let filtered = currentTimeData;
-      if (type === 'LateOpen') filtered = currentTimeData.filter(r => r[7] === 'Red');
-      else if (type === 'LateClose') filtered = currentTimeData.filter(r => r[8] === 'Red');
-      
-      let html = filtered.length ? '' : '<div class="text-center text-muted py-5"><i class="bi bi-inbox d-block fs-1"></i>ไม่พบข้อมูลในระบบ</div>';
-      filtered.forEach(row => {
-        html += `<div class="store-card card p-3">
-          <div class="d-flex justify-content-between align-items-center mb-3">
-            <h6 class="store-title fw-bold text-primary">${row[2]} ${row[3]}</h6>
-            <span class="badge bg-secondary opacity-75"><i class="bi bi-calendar3"></i> ${row[4]}</span>
-          </div>
-          <div class="row g-2 text-center mt-1">
-            <div class="col-6"><div class="time-box"><small class="text-muted d-block fw-bold" style="font-size: 0.75rem;">เวลาเข้าร้าน</small><div class="fw-bold time-text text-dark">${row[5]?row[5].substring(0,5):'-'} น.</div>${getTimeBadge(row[7])}</div></div>
-            <div class="col-6"><div class="time-box"><small class="text-muted d-block fw-bold" style="font-size: 0.75rem;">เวลาออกร้าน</small><div class="fw-bold time-text text-dark">${row[6]?row[6].substring(0,5):'-'} น.</div>${getTimeBadge(row[8])}</div></div>
-          </div>
-        </div>`;
-      });
-      document.getElementById('timeCardContainer').innerHTML = html;
-    }
-    
-    function getTimeBadge(status) {
-      if(status === 'Red') return `<span class="badge bg-danger status-badge"><i class="bi bi-x-circle"></i> สาย (Red)</span>`;
-      if(status === 'Yellow') return `<span class="badge bg-warning text-dark status-badge"><i class="bi bi-exclamation-circle"></i> เสี่ยง (Yellow)</span>`;
-      if(status === 'Green') return `<span class="badge bg-success status-badge"><i class="bi bi-check-circle"></i> ปกติ (Green)</span>`;
-      return `<span class="badge bg-secondary status-badge opacity-50">-</span>`;
-    }
-
-    // ================= โหมด Sales =================
+    // ================= โหมด Sales (RM เลือกก่อน AM/DM) =================
     function loadSalesDropdowns() {
       showLoading(true);
       fetch(APPS_SCRIPT_URL + "?action=getSalesDropdown").then(res => res.json()).then(data => {
         salesDataMapping = data.mapping; salesAllStores = data.stores;
-        let dmSel = document.getElementById('salesDMSelect'); dmSel.innerHTML = '<option value="">-- ทั้งหมด --</option>';
-        data.dms.forEach(d => dmSel.add(new Option(d, d)));
+        let rmSel = document.getElementById('salesRMSelect'); rmSel.innerHTML = '<option value="">-- ทั้งหมด --</option>';
+        data.rms.forEach(r => rmSel.add(new Option(r, r)));
         updateSalesFilters(); showLoading(false); isSalesLoaded = true;
       });
     }
 
     function updateSalesFilters() {
-      let dm = document.getElementById('salesDMSelect').value;
-      let rmSel = document.getElementById('salesRMSelect'); let curRM = rmSel.value;
-      rmSel.innerHTML = '<option value="">-- ทั้งหมด --</option>';
-      if (dm && salesDataMapping[dm]) salesDataMapping[dm].forEach(r => { let o = new Option(r, r); if(r===curRM) o.selected=true; rmSel.add(o); });
+      let rm = document.getElementById('salesRMSelect').value;
+      let dmSel = document.getElementById('salesDMSelect'); let curDM = dmSel.value;
+      dmSel.innerHTML = '<option value="">-- ทั้งหมด --</option>';
+      if (rm && salesDataMapping[rm]) salesDataMapping[rm].forEach(d => { let o = new Option(d, d); if(d===curDM) o.selected=true; dmSel.add(o); });
       
       let sSel = document.getElementById('salesStoreSelect'); let curS = sSel.value;
       sSel.innerHTML = '<option value="">-- สาขาทั้งหมด --</option>';
-      salesAllStores.filter(s => (!dm || s.dm===dm) && (!rmSel.value || s.rm===rmSel.value)).forEach(s => {
+      salesAllStores.filter(s => (!rm || s.rm===rm) && (!dmSel.value || s.dm===dmSel.value)).forEach(s => {
          let o = new Option(`${s.code} ${s.name}`, s.code); if(s.code===curS) o.selected=true; sSel.add(o);
       });
     }
 
+    function fmtN(num) { return (num || num === 0) ? Number(num).toLocaleString('th-TH', {maximumFractionDigits: 0}) : '-'; }
+    function fmtP(num) { return (num || num === 0) ? (Number(num) * 100).toFixed(2) + '%' : '-'; }
+    function getColor(num) { return Number(num) >= 0 ? 'val-diff-up' : 'val-diff-down'; }
+
     function fetchSalesData() {
       showLoading(true); document.getElementById('salesCardContainer').innerHTML = '';
-      let url = `${APPS_SCRIPT_URL}?action=getSalesData&dm=${encodeURIComponent(document.getElementById('salesDMSelect').value)}&rm=${encodeURIComponent(document.getElementById('salesRMSelect').value)}&store=${encodeURIComponent(document.getElementById('salesStoreSelect').value)}`;
+      let url = `${APPS_SCRIPT_URL}?action=getSalesData&rm=${encodeURIComponent(document.getElementById('salesRMSelect').value)}&dm=${encodeURIComponent(document.getElementById('salesDMSelect').value)}&store=${encodeURIComponent(document.getElementById('salesStoreSelect').value)}`;
       
       fetch(url).then(res => res.json()).then(data => {
-        let html = data.length ? '' : '<div class="text-center text-muted py-5"><i class="bi bi-inbox d-block fs-1"></i>ไม่พบข้อมูลยอดขาย</div>';
-        data.forEach(row => {
-          let actual = Number(row.actual).toLocaleString('th-TH', {minimumFractionDigits: 2, maximumFractionDigits: 2});
-          let budget = Number(row.budget).toLocaleString('th-TH', {minimumFractionDigits: 2, maximumFractionDigits: 2});
-          let variance = Number(row.variance);
-          let varColor = variance >= 0 ? 'text-success' : 'text-danger';
-          let varIcon = variance >= 0 ? 'bi-arrow-up-right' : 'bi-arrow-down-right';
-          let varText = (variance * 100).toFixed(2) + '%'; // แสดงเป็นเปอร์เซ็นต์
+        currentHeaderDate = data.headerDate; // เก็บวันที่จากไฟล์ (เช่น MTD : 1 - 20 March 2026)
+        currentSalesDataList = data.list; // เก็บข้อมูลทั้งหมดไว้ทำ Modal
+        
+        let html = currentSalesDataList.length ? '' : '<div class="text-center text-muted py-5"><i class="bi bi-inbox d-block fs-1"></i>ไม่พบข้อมูลยอดขาย</div>';
+        
+        currentSalesDataList.forEach((row, index) => {
+          html += `
+          <div class="store-card card p-3 shadow-sm" onclick="openSalesModal(${index})">
+            <h6 class="store-title fw-bold text-success mb-2">${row.storeCode} ${row.storeName}</h6>
+            <div class="fw-bold mb-1" style="font-size: 0.8rem; color: #475569;">Sales <span class="text-primary">${currentHeaderDate}</span></div>
+            
+            <div class="mb-2">
+              <span class="fw-bold d-block" style="font-size: 0.85rem;">Total Sales</span>
+              <div class="sales-block">
+                <div>TY: <span class="val-ty">${fmtN(row.salesTY)}</span></div>
+                <div>BG: ${fmtN(row.salesBG)}</div>
+                <div class="${getColor(row.diffSalesBG)}">Diff BG: ${fmtN(row.diffSalesBG)} (${fmtP(row.varSalesBG)})</div>
+                <div>LY: ${fmtN(row.salesLY)}</div>
+                <div class="${getColor(row.diffSalesLY)}">Diff LY: ${fmtN(row.diffSalesLY)} (${fmtP(row.chgSalesLY)})</div>
+              </div>
+            </div>
 
-          html += `<div class="store-card card p-3">
-            <h6 class="store-title fw-bold text-success mb-3">${row.storeCode} ${row.storeName}</h6>
-            <div class="row g-2 text-center">
-              <div class="col-6"><div class="sales-box"><small class="text-muted d-block fw-bold" style="font-size: 0.75rem;">ยอดขาย (Actual)</small><div class="fw-bold sales-text">${actual}</div></div></div>
-              <div class="col-6"><div class="sales-box"><small class="text-muted d-block fw-bold" style="font-size: 0.75rem;">เป้าหมาย (Budget)</small><div class="fw-bold sales-text text-muted">${budget}</div></div></div>
+            <div>
+              <span class="fw-bold d-block" style="font-size: 0.85rem;">ADS</span>
+              <div class="sales-block">
+                <div>TY: <span class="val-ty">${fmtN(row.adsTY)}</span></div>
+                <div>BG: ${fmtN(row.adsBG)}</div>
+                <div class="${getColor(row.diffAdsBG)}">Diff BG: ${fmtN(row.diffAdsBG)} (${fmtP(row.varAdsBG)})</div>
+                <div>LY: ${fmtN(row.adsLY)}</div>
+                <div class="${getColor(row.diffAdsLY)}">Diff LY: ${fmtN(row.diffAdsLY)} (${fmtP(row.chgAdsLY)})</div>
+              </div>
             </div>
-            <div class="mt-2 text-end">
-              <small class="fw-bold ${varColor}"><i class="bi ${varIcon}"></i> เทียบเป้า: ${varText}</small>
-            </div>
+
+            <div class="text-end mt-2"><small class="text-primary opacity-75"><i class="bi bi-hand-index"></i> แตะเพื่อดูรายละเอียดทั้งหมด</small></div>
           </div>`;
         });
-        document.getElementById('salesCardContainer').innerHTML = html;
-        showLoading(false);
+        document.getElementById('salesCardContainer').innerHTML = html; showLoading(false);
       });
+    }
+
+    // ================= ฟังก์ชันเปิด Modal พร้อมดึงข้อมูลแบบเจาะลึก =================
+    function openSalesModal(index) {
+      let row = currentSalesDataList[index];
+      
+      document.getElementById('modalStoreName').innerText = `${row.storeCode} ${row.storeName}`;
+      document.getElementById('modalStoreInfo').innerText = `RM: ${row.rm} | DM: ${row.dm}`;
+      
+      let html = `
+        <div class="card p-3 mb-2 shadow-sm border-0">
+          <h6 class="fw-bold text-dark border-bottom pb-2">ลูกค้าเข้าร้าน (TC)</h6>
+          <div class="row text-center mt-2">
+            <div class="col-4"><small class="text-muted d-block">TY</small><b>${fmtN(row.tcTY)}</b></div>
+            <div class="col-4"><small class="text-muted d-block">LY</small><b>${fmtN(row.tcLY)}</b></div>
+            <div class="col-4"><small class="text-muted d-block">Diff</small><b class="${getColor(row.diffTC)}">${fmtN(row.diffTC)}</b></div>
+          </div>
+        </div>
+
+        <div class="card p-3 mb-2 shadow-sm border-0">
+          <h6 class="fw-bold text-dark border-bottom pb-2">ยอดซื้อต่อบิล (TV)</h6>
+          <div class="row text-center mt-2">
+            <div class="col-4"><small class="text-muted d-block">TY</small><b>${fmtN(row.tvTY)}</b></div>
+            <div class="col-4"><small class="text-muted d-block">LY</small><b>${fmtN(row.tvLY)}</b></div>
+            <div class="col-4"><small class="text-muted d-block">Diff</small><b class="${getColor(row.diffTV)}">${fmtN(row.diffTV)}</b></div>
+          </div>
+        </div>
+
+        <div class="card p-3 shadow-sm border-0">
+          <h6 class="fw-bold text-dark border-bottom pb-2">กำไร (GP)</h6>
+          <div class="row text-center mt-2">
+            <div class="col-4"><small class="text-muted d-block">TY</small><b>${fmtP(row.gpTY)}</b></div>
+            <div class="col-4"><small class="text-muted d-block">LY</small><b>${fmtP(row.gpLY)}</b></div>
+            <div class="col-4"><small class="text-muted d-block">Diff</small><b class="${getColor(row.gpDiff)}">${fmtP(row.gpDiff)}</b></div>
+          </div>
+        </div>
+      `;
+
+      document.getElementById('modalBodyContent').innerHTML = html;
+      detailsModal.show(); // สั่งป๊อปอัปให้เด้งขึ้น
     }
 
     function showLoading(show) { document.getElementById('loading').style.display = show ? 'block' : 'none'; }
