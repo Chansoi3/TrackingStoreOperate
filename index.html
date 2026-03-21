@@ -24,26 +24,15 @@
       margin-top: -30px; position: relative; z-index: 10; background: white;
     }
     
-    /* อัปเดต CSS การ์ดที่นี่ */
     .store-card {
-      border-radius: 16px; 
-      border: 1px solid #e2e8f0; /* กรอบสีเทาอ่อนให้เห็นขอบเขต */
-      box-shadow: 0 6px 15px rgba(0,0,0,0.06); /* เงาให้การ์ดดูลอยขึ้น */
-      transition: all 0.2s ease; 
-      margin-bottom: 20px; /* ระยะห่างระหว่างการ์ด */
-      position: relative;
+      border-radius: 16px; border: 1px solid #e2e8f0; 
+      box-shadow: 0 6px 15px rgba(0,0,0,0.06); transition: all 0.2s ease; 
+      margin-bottom: 20px; position: relative;
     }
     .store-card:active { transform: scale(0.98); }
     
-    /* ปรับสีพื้นหลังสลับ และเพิ่มแถบสีด้านซ้าย */
-    .store-card:nth-child(odd) { 
-      background-color: #ffffff; 
-      border-left: 6px solid #2c5364; /* แถบสีเข้ม */
-    }          
-    .store-card:nth-child(even) { 
-      background-color: #f4f9ff; 
-      border-left: 6px solid #6ab0e6; /* แถบสีอ่อน */
-    }         
+    .store-card:nth-child(odd) { background-color: #ffffff; border-left: 6px solid #2c5364; }          
+    .store-card:nth-child(even) { background-color: #f4f9ff; border-left: 6px solid #6ab0e6; }         
     
     .store-title { font-size: 1.05rem; line-height: 1.3; margin-bottom: 0px; }
     .time-box { background-color: rgba(255, 255, 255, 0.6); border-radius: 12px; padding: 10px; border: 1px solid #e9ecef;}
@@ -51,6 +40,9 @@
     
     .status-badge { font-size: 0.75rem; padding: 5px 0; border-radius: 8px; width: 100%; display: block; }
     .form-select, .btn { border-radius: 10px; font-size: 0.9rem; }
+    
+    /* ปรับแต่งปุ่ม Filter เสริม */
+    .btn-group .btn { font-size: 0.85rem; padding: 8px 0; font-weight: 600;}
   </style>
 </head>
 <body>
@@ -60,7 +52,7 @@
   </div>
 
   <div class="container px-3">
-    <div class="card filter-card p-3 mb-4 mx-auto">
+    <div class="card filter-card p-3 mb-3 mx-auto">
       <div class="row g-2 align-items-end">
         <div class="col-12">
           <label class="form-label text-muted fw-bold mb-1" style="font-size: 0.8rem;"><i class="bi bi-calendar-event"></i> เลือกวันที่ (DD/MM/YYYY)</label>
@@ -94,6 +86,21 @@
       </div>
     </div>
 
+    <div class="row px-1 mb-4" id="statusFilterContainer" style="display: none;">
+      <div class="col-12">
+        <div class="btn-group w-100 shadow-sm" role="group">
+          <input type="radio" class="btn-check" name="statusFilter" id="filterAll" value="All" autocomplete="off" checked onchange="applyStatusFilter()">
+          <label class="btn btn-outline-primary" for="filterAll">ทั้งหมด</label>
+
+          <input type="radio" class="btn-check" name="statusFilter" id="filterLateOpen" value="LateOpen" autocomplete="off" onchange="applyStatusFilter()">
+          <label class="btn btn-outline-danger" for="filterLateOpen">เปิดสาย</label>
+
+          <input type="radio" class="btn-check" name="statusFilter" id="filterLateClose" value="LateClose" autocomplete="off" onchange="applyStatusFilter()">
+          <label class="btn btn-outline-warning" for="filterLateClose">ปิดช้า</label>
+        </div>
+      </div>
+    </div>
+
     <div id="loading" class="text-center my-5" style="display:none;">
       <div class="spinner-border text-primary" role="status"></div>
       <p class="mt-2 text-muted fw-bold">กำลังดึงข้อมูล...</p>
@@ -108,6 +115,7 @@
     
     let areaDataMapping = {};
     let allStoresData = []; 
+    let currentFetchedData = []; // เพิ่มตัวแปรเก็บข้อมูลดิบที่ดึงมา เพื่อใช้ทำ Filter ในหน้าเว็บ
 
     window.onload = function() {
       fetch(APPS_SCRIPT_URL + "?action=getDropdown")
@@ -175,16 +183,39 @@
       
       document.getElementById('loading').style.display = 'block';
       document.getElementById('cardContainer').innerHTML = '';
+      document.getElementById('statusFilterContainer').style.display = 'none'; // ซ่อนปุ่ม Filter ตอนกำลังโหลด
 
       let url = `${APPS_SCRIPT_URL}?action=getTableData&dist=${encodeURIComponent(dist)}&area=${encodeURIComponent(area)}&date=${encodeURIComponent(date)}&store=${encodeURIComponent(store)}`;
 
       fetch(url)
         .then(res => res.json())
-        .then(data => renderCards(data))
+        .then(data => {
+          currentFetchedData = data; // เก็บข้อมูลทั้งหมดไว้ในตัวแปร
+          document.getElementById('statusFilterContainer').style.display = 'block'; // แสดงปุ่ม Filter เมื่อโหลดเสร็จ
+          applyStatusFilter(); // เรียกใช้การกรองข้อมูลปัจจุบัน
+        })
         .catch(err => {
           document.getElementById('loading').style.display = 'none';
           document.getElementById('cardContainer').innerHTML = '<div class="alert alert-danger text-center">ไม่สามารถเชื่อมต่อได้</div>';
         });
+    }
+
+    // ฟังก์ชันใหม่ สำหรับกรองข้อมูลแบบ Real-time บนหน้าเว็บ
+    function applyStatusFilter() {
+      let filterType = document.querySelector('input[name="statusFilter"]:checked').value;
+      let filteredData = currentFetchedData;
+
+      if (filterType === 'LateOpen') {
+        // กรองเฉพาะสาขาที่ เปิดร้านสาย (monitorOpen คือ 'Red')
+        filteredData = currentFetchedData.filter(row => row[7] === 'Red');
+      } 
+      else if (filterType === 'LateClose') {
+        // กรองเฉพาะสาขาที่ ปิดร้านช้า (monitorClose คือ 'Red')
+        // *หมายเหตุ: ถ้าสถานะปิดช้าของคุณคือสีอื่น เช่น 'Yellow' ให้แก้ตรงนี้ได้เลยครับ
+        filteredData = currentFetchedData.filter(row => row[8] === 'Red');
+      }
+
+      renderCards(filteredData);
     }
 
     function renderCards(data) {
@@ -192,7 +223,7 @@
       let container = document.getElementById('cardContainer');
       
       if(data.length === 0) {
-        container.innerHTML = '<div class="text-center text-muted py-5"><i class="bi bi-inbox d-block fs-1"></i>ไม่พบข้อมูลในระบบ</div>';
+        container.innerHTML = '<div class="text-center text-muted py-5"><i class="bi bi-inbox d-block fs-1"></i>ไม่พบข้อมูลในระบบ หรือไม่พบสาขาในสถานะนี้</div>';
         return;
       }
 
