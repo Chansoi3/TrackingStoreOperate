@@ -70,6 +70,7 @@
   <div class="app-header text-center">
     <a href="#" onclick="showPage('home')" class="back-btn" id="backBtn" style="display:none;"><i class="bi bi-arrow-left-circle"></i></a>
     <h4 class="fw-bold mb-1" id="headerTitle"><i class="bi bi-grid-fill"></i> เลือกระบบทำงาน</h4>
+    <div id="fileDateDisplay" style="font-size: 0.85rem; opacity: 0.8; margin-top: 5px; display: none;"></div>
   </div>
 
   <div class="container px-3">
@@ -162,6 +163,7 @@
       document.getElementById('pageSales').style.display = 'none';
       document.getElementById('backBtn').style.display = page === 'home' ? 'none' : 'block';
       document.getElementById('loading').style.display = 'none';
+      document.getElementById('fileDateDisplay').style.display = 'none';
 
       if (page === 'home') {
         document.getElementById('headerTitle').innerHTML = '<i class="bi bi-grid-fill"></i> เลือกระบบทำงาน';
@@ -213,14 +215,14 @@
         data.forEach(row => {
           let stIn = row[7], stOut = row[8];
           
-          // 💡 ระบบแสดงแถบสีแดง/เหลือง/เขียว สำหรับโหมดเปิด-ปิดร้าน
-          let borderColor = "#cbd5e1"; // สีเทาเริ่มต้น
-          if (stIn === 'Red' || stOut === 'Red') borderColor = "#dc2626"; // แดง (สาย/ช้า)
-          else if (stIn === 'Yellow' || stOut === 'Yellow') borderColor = "#eab308"; // เหลือง (เสี่ยง)
-          else if (stIn === 'Green' && stOut === 'Green') borderColor = "#16a34a"; // เขียว (ปกติ)
+          // ระบบสี เขียว/เหลือง/แดง ตรงตามสถานะ
+          let borderColor = "#cbd5e1"; 
+          if (stIn === 'Red' || stOut === 'Red') borderColor = "#dc2626";
+          else if (stIn === 'Yellow' || stOut === 'Yellow') borderColor = "#eab308";
+          else if (stIn === 'Green' && stOut === 'Green') borderColor = "#16a34a";
 
           html += `
-          <div class="store-card card p-3" style="border-left: 6px solid ${borderColor};">
+          <div class="store-card card p-3" style="border-left: 6px solid ${borderColor}; cursor: default;">
             <div class="d-flex justify-content-between align-items-center mb-3">
               <h6 class="store-title fw-bold text-primary">${row[2]} ${row[3]}</h6>
               <span class="badge bg-secondary opacity-75"><i class="bi bi-calendar3"></i> ${row[4]}</span>
@@ -268,8 +270,14 @@
       let url = `${APPS_SCRIPT_URL}?action=getSalesData&rm=${encodeURIComponent(document.getElementById('salesRMSelect').value)}&dm=${encodeURIComponent(document.getElementById('salesDMSelect').value)}&store=${encodeURIComponent(document.getElementById('salesStoreSelect').value)}`;
       
       fetch(url).then(res => res.json()).then(data => {
-        currentHeaderDate = data.headerDate; // ดึงวันที่จากช่อง B4 ตามต้องการ
+        currentHeaderDate = data.headerDate; 
         currentSalesDataList = data.list;
+
+        if (data.fileDate) {
+          let dateEl = document.getElementById('fileDateDisplay');
+          dateEl.innerHTML = `<i class="bi bi-info-circle"></i> ข้อมูลยอดขาย: ${data.fileDate}`;
+          dateEl.style.display = 'block';
+        }
 
         if(currentSalesDataList.length > 0) {
           document.getElementById('salesResultContainer').style.display = 'block';
@@ -300,14 +308,8 @@
     }
 
     function renderSalesCards(data) {
-      // ตัวแปรนับสำหรับเทียบ BG
-      let posBG = 0, posBG_CO = 0, posBG_FC = 0;
-      let negBG = 0, negBG_CO = 0, negBG_FC = 0;
-      
-      // ตัวแปรนับสำหรับเทียบ LY
-      let posLY = 0, posLY_CO = 0, posLY_FC = 0;
-      let negLY = 0, negLY_CO = 0, negLY_FC = 0;
-      
+      let posBG = 0, posBG_CO = 0, posBG_FC = 0; let negBG = 0, negBG_CO = 0, negBG_FC = 0;
+      let posLY = 0, posLY_CO = 0, posLY_FC = 0; let negLY = 0, negLY_CO = 0, negLY_FC = 0;
       let html = '';
 
       data.forEach((row, index) => {
@@ -316,11 +318,9 @@
         let isCO = (row.cofc || "").toString().toUpperCase().includes('CO');
         let isFC = (row.cofc || "").toString().toUpperCase().includes('FC');
 
-        // นับสรุปเทียบ BG
         if (diffBG >= 0) { posBG++; if (isCO) posBG_CO++; else if (isFC) posBG_FC++; } 
         else { negBG++; if (isCO) negBG_CO++; else if (isFC) negBG_FC++; }
 
-        // นับสรุปเทียบ LY
         if (diffLY >= 0) { posLY++; if (isCO) posLY_CO++; else if (isFC) posLY_FC++; } 
         else { negLY++; if (isCO) negLY_CO++; else if (isFC) negLY_FC++; }
 
@@ -356,7 +356,6 @@
         </div>`;
       });
 
-      // 💡 อัปเดตกล่องสรุปใหม่ (แบ่งครึ่งซ้ายขวา โชว์ทั้ง BG และ LY)
       document.getElementById('salesSummaryBox').innerHTML = `
         <div class="fw-bold text-dark mb-2 border-bottom pb-2"><i class="bi bi-bar-chart-fill text-primary"></i> สรุปผลการค้นหา (${data.length} สาขา)</div>
         <div class="row text-center mt-2">
@@ -372,7 +371,6 @@
           </div>
         </div>
       `;
-
       document.getElementById('salesCardContainer').innerHTML = html;
     }
 
@@ -419,7 +417,6 @@
           </div>
         </div>
       `;
-
       document.getElementById('modalBodyContent').innerHTML = html;
       detailsModal.show();
     }
