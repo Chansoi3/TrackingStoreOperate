@@ -8,7 +8,6 @@
   <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
   <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.5/font/bootstrap-icons.css" rel="stylesheet">
   <link href="https://fonts.googleapis.com/css2?family=Prompt:wght@300;400;600&display=swap" rel="stylesheet">
-  
   <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
 
   <style>
@@ -25,17 +24,20 @@
       border-radius: 16px; border: none; box-shadow: 0 8px 20px rgba(0,0,0,0.06);
       margin-top: -30px; position: relative; z-index: 10; background: white;
     }
+
+    .summary-box {
+      background: white; border-radius: 12px; padding: 15px; margin-bottom: 20px;
+      box-shadow: 0 4px 10px rgba(0,0,0,0.05); border: 1px solid #e2e8f0;
+      font-size: 0.9rem;
+    }
     
-    /* การ์ดที่สามารถกดได้ (Clickable Card) */
     .store-card {
       border-radius: 16px; border: 1px solid #e2e8f0; 
       box-shadow: 0 6px 15px rgba(0,0,0,0.06); transition: all 0.2s ease; 
-      margin-bottom: 20px; position: relative; cursor: pointer;
+      margin-bottom: 20px; position: relative; cursor: pointer; background-color: #ffffff;
     }
     .store-card:hover { transform: translateY(-3px); box-shadow: 0 10px 25px rgba(0,0,0,0.1); }
     .store-card:active { transform: scale(0.98); }
-    .store-card:nth-child(odd) { background-color: #ffffff; border-left: 6px solid #2c5364; }          
-    .store-card:nth-child(even) { background-color: #f4f9ff; border-left: 6px solid #6ab0e6; }         
     
     .store-title { font-size: 1.05rem; line-height: 1.3; margin-bottom: 0px; }
     .time-box { background-color: rgba(255, 255, 255, 0.6); border-radius: 12px; padding: 10px; border: 1px solid #e9ecef;}
@@ -53,7 +55,6 @@
     .menu-icon { font-size: 2.5rem; margin-bottom: 10px; color: #3b82f6; }
     .back-btn { position: absolute; top: 15px; left: 15px; color: white; font-size: 1.5rem; text-decoration: none; }
 
-    /* CSS สำหรับการ์ดยอดขายและป๊อปอัป */
     .sales-block { font-size: 0.85rem; padding-left: 12px; line-height: 1.45; border-left: 2px solid #e9ecef; margin-top: 5px; }
     .val-ty { font-weight: 600; color: #1e293b; }
     .val-diff-up { color: #16a34a; font-weight: 600;}
@@ -69,22 +70,15 @@
   <div class="app-header text-center">
     <a href="#" onclick="showPage('home')" class="back-btn" id="backBtn" style="display:none;"><i class="bi bi-arrow-left-circle"></i></a>
     <h4 class="fw-bold mb-1" id="headerTitle"><i class="bi bi-grid-fill"></i> เลือกระบบทำงาน</h4>
+    <div id="fileDateDisplay" style="font-size: 0.85rem; opacity: 0.8; margin-top: 5px; display: none;"></div>
   </div>
 
   <div class="container px-3">
     
     <div id="pageHome" class="mt-4">
       <div class="row g-3">
-        <div class="col-6">
-          <a href="#" class="menu-btn" onclick="showPage('sales')">
-            <i class="bi bi-graph-up-arrow menu-icon text-success"></i><h6 class="fw-bold mb-0">เช็คยอดขาย</h6>
-          </a>
-        </div>
-        <div class="col-6">
-          <a href="#" class="menu-btn" onclick="showPage('time')">
-            <i class="bi bi-clock-history menu-icon text-primary"></i><h6 class="fw-bold mb-0">เช็คเปิด-ปิดร้าน</h6>
-          </a>
-        </div>
+        <div class="col-6"><a href="#" class="menu-btn" onclick="showPage('sales')"><i class="bi bi-graph-up-arrow menu-icon text-success"></i><h6 class="fw-bold mb-0">เช็คยอดขาย</h6></a></div>
+        <div class="col-6"><a href="#" class="menu-btn" onclick="showPage('time')"><i class="bi bi-clock-history menu-icon text-primary"></i><h6 class="fw-bold mb-0">เช็คเปิด-ปิดร้าน</h6></a></div>
       </div>
     </div>
 
@@ -121,7 +115,18 @@
           </div>
         </div>
       </div>
-      <div id="salesCardContainer" class="pb-4"></div>
+      
+      <div id="salesResultContainer" style="display:none;">
+        <div class="summary-box" id="salesSummaryBox"></div>
+        <div class="mb-3">
+          <select id="salesSortSelect" class="form-select bg-white shadow-sm" onchange="applySalesSort()">
+            <option value="default">จัดเรียง: ยอดขายบวกขึ้นก่อน</option>
+            <option value="salesDesc">จัดเรียง: ยอดขายรวม (มาก ไป น้อย)</option>
+            <option value="salesAsc">จัดเรียง: ยอดขายรวม (น้อย ไป มาก)</option>
+          </select>
+        </div>
+        <div id="salesCardContainer" class="pb-4"></div>
+      </div>
     </div>
 
     <div id="loading" class="text-center my-5" style="display:none;"><div class="spinner-border text-primary" role="status"></div><p class="mt-2 text-muted fw-bold">กำลังดึงข้อมูล...</p></div>
@@ -133,12 +138,11 @@
         <div class="modal-header">
           <div>
             <h5 class="modal-title fw-bold text-success" id="modalStoreName">Store Name</h5>
-            <div class="modal-subtext" id="modalStoreInfo">RM: - | DM: -</div>
+            <div class="modal-subtext" id="modalStoreInfo">RM: - | DM: - | Type: -</div>
           </div>
           <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
         </div>
-        <div class="modal-body" id="modalBodyContent" style="background-color: #f8fafc;">
-          </div>
+        <div class="modal-body" id="modalBodyContent" style="background-color: #f8fafc;"></div>
       </div>
     </div>
   </div>
@@ -149,19 +153,17 @@
     let timeDataMapping = {}, timeAllStores = [], currentTimeData = [];
     let salesDataMapping = {}, salesAllStores = [], currentSalesDataList = [], currentHeaderDate = "MTD";
     let isTimeLoaded = false, isSalesLoaded = false;
-    let detailsModal; // ตัวแปรเก็บ Modal
+    let detailsModal;
 
-    window.onload = function() {
-      detailsModal = new bootstrap.Modal(document.getElementById('storeModal'));
-    }
+    window.onload = function() { detailsModal = new bootstrap.Modal(document.getElementById('storeModal')); }
 
-    // ระบบจัดการหน้าจอ
     function showPage(page) {
       document.getElementById('pageHome').style.display = 'none';
       document.getElementById('pageTime').style.display = 'none';
       document.getElementById('pageSales').style.display = 'none';
       document.getElementById('backBtn').style.display = page === 'home' ? 'none' : 'block';
       document.getElementById('loading').style.display = 'none';
+      document.getElementById('fileDateDisplay').style.display = 'none';
 
       if (page === 'home') {
         document.getElementById('headerTitle').innerHTML = '<i class="bi bi-grid-fill"></i> เลือกระบบทำงาน';
@@ -179,7 +181,7 @@
       }
     }
 
-    // ================= โหมด Time (คงเดิม) =================
+    // ================= โหมด Time =================
     function loadTimeDropdowns() {
       showLoading(true);
       fetch(APPS_SCRIPT_URL + "?action=getDropdown").then(res => res.json()).then(data => {
@@ -217,7 +219,7 @@
       });
     }
 
-    // ================= โหมด Sales (RM เลือกก่อน AM/DM) =================
+    // ================= โหมด Sales =================
     function loadSalesDropdowns() {
       showLoading(true);
       fetch(APPS_SCRIPT_URL + "?action=getSalesDropdown").then(res => res.json()).then(data => {
@@ -246,56 +248,122 @@
     function getColor(num) { return Number(num) >= 0 ? 'val-diff-up' : 'val-diff-down'; }
 
     function fetchSalesData() {
-      showLoading(true); document.getElementById('salesCardContainer').innerHTML = '';
+      showLoading(true); document.getElementById('salesResultContainer').style.display = 'none';
       let url = `${APPS_SCRIPT_URL}?action=getSalesData&rm=${encodeURIComponent(document.getElementById('salesRMSelect').value)}&dm=${encodeURIComponent(document.getElementById('salesDMSelect').value)}&store=${encodeURIComponent(document.getElementById('salesStoreSelect').value)}`;
       
       fetch(url).then(res => res.json()).then(data => {
-        currentHeaderDate = data.headerDate; // เก็บวันที่จากไฟล์ (เช่น MTD : 1 - 20 March 2026)
-        currentSalesDataList = data.list; // เก็บข้อมูลทั้งหมดไว้ทำ Modal
-        
-        let html = currentSalesDataList.length ? '' : '<div class="text-center text-muted py-5"><i class="bi bi-inbox d-block fs-1"></i>ไม่พบข้อมูลยอดขาย</div>';
-        
-        currentSalesDataList.forEach((row, index) => {
-          html += `
-          <div class="store-card card p-3 shadow-sm" onclick="openSalesModal(${index})">
-            <h6 class="store-title fw-bold text-success mb-2">${row.storeCode} ${row.storeName}</h6>
-            <div class="fw-bold mb-1" style="font-size: 0.8rem; color: #475569;">Sales <span class="text-primary">${currentHeaderDate}</span></div>
-            
-            <div class="mb-2">
-              <span class="fw-bold d-block" style="font-size: 0.85rem;">Total Sales</span>
-              <div class="sales-block">
-                <div>TY: <span class="val-ty">${fmtN(row.salesTY)}</span></div>
-                <div>BG: ${fmtN(row.salesBG)}</div>
-                <div class="${getColor(row.diffSalesBG)}">Diff BG: ${fmtN(row.diffSalesBG)} (${fmtP(row.varSalesBG)})</div>
-                <div>LY: ${fmtN(row.salesLY)}</div>
-                <div class="${getColor(row.diffSalesLY)}">Diff LY: ${fmtN(row.diffSalesLY)} (${fmtP(row.chgSalesLY)})</div>
-              </div>
-            </div>
+        currentHeaderDate = data.headerDate; 
+        currentSalesDataList = data.list;
 
-            <div>
-              <span class="fw-bold d-block" style="font-size: 0.85rem;">ADS</span>
-              <div class="sales-block">
-                <div>TY: <span class="val-ty">${fmtN(row.adsTY)}</span></div>
-                <div>BG: ${fmtN(row.adsBG)}</div>
-                <div class="${getColor(row.diffAdsBG)}">Diff BG: ${fmtN(row.diffAdsBG)} (${fmtP(row.varAdsBG)})</div>
-                <div>LY: ${fmtN(row.adsLY)}</div>
-                <div class="${getColor(row.diffAdsLY)}">Diff LY: ${fmtN(row.diffAdsLY)} (${fmtP(row.chgAdsLY)})</div>
-              </div>
-            </div>
+        // แสดงวันที่จากไฟล์ด้านบนสุด
+        if (data.fileDate) {
+          let dateEl = document.getElementById('fileDateDisplay');
+          dateEl.innerHTML = `<i class="bi bi-info-circle"></i> ข้อมูลยอดขาย: ${data.fileDate}`;
+          dateEl.style.display = 'block';
+        }
 
-            <div class="text-end mt-2"><small class="text-primary opacity-75"><i class="bi bi-hand-index"></i> แตะเพื่อดูรายละเอียดทั้งหมด</small></div>
-          </div>`;
-        });
-        document.getElementById('salesCardContainer').innerHTML = html; showLoading(false);
+        if(currentSalesDataList.length > 0) {
+          document.getElementById('salesResultContainer').style.display = 'block';
+          document.getElementById('salesSortSelect').value = 'default';
+          applySalesSort(); // เรียงและวาดการ์ด
+        } else {
+          document.getElementById('salesResultContainer').style.display = 'block';
+          document.getElementById('salesSummaryBox').innerHTML = '';
+          document.getElementById('salesCardContainer').innerHTML = '<div class="text-center text-muted py-5"><i class="bi bi-inbox d-block fs-1"></i>ไม่พบข้อมูลยอดขาย</div>';
+        }
+        showLoading(false);
       });
     }
 
-    // ================= ฟังก์ชันเปิด Modal พร้อมดึงข้อมูลแบบเจาะลึก =================
-    function openSalesModal(index) {
-      let row = currentSalesDataList[index];
+    function applySalesSort() {
+      let sortType = document.getElementById('salesSortSelect').value;
+      let sortedData = [...currentSalesDataList];
+
+      if (sortType === 'default') {
+        // เรียงยอดบวกมากสุดไปติดลบมากสุด
+        sortedData.sort((a, b) => (Number(b.diffSalesBG)||0) - (Number(a.diffSalesBG)||0));
+      } else if (sortType === 'salesDesc') {
+        // เรียงยอดขายมากไปน้อย
+        sortedData.sort((a, b) => (Number(b.salesTY)||0) - (Number(a.salesTY)||0));
+      } else if (sortType === 'salesAsc') {
+        // เรียงยอดขายน้อยไปมาก
+        sortedData.sort((a, b) => (Number(a.salesTY)||0) - (Number(b.salesTY)||0));
+      }
+      
+      renderSalesCards(sortedData);
+    }
+
+    function renderSalesCards(data) {
+      let posCount = 0, posCO = 0, posFC = 0;
+      let negCount = 0, negCO = 0, negFC = 0;
+      let html = '';
+
+      data.forEach((row, index) => {
+        let variance = Number(row.diffSalesBG) || 0;
+        let isCO = (row.cofc || "").toString().toUpperCase().includes('CO');
+        let isFC = (row.cofc || "").toString().toUpperCase().includes('FC');
+
+        // นับสรุปยอด
+        if (variance >= 0) {
+          posCount++;
+          if (isCO) posCO++; else if (isFC) posFC++;
+        } else {
+          negCount++;
+          if (isCO) negCO++; else if (isFC) negFC++;
+        }
+
+        // ตัดขอบสีการ์ดตามยอด
+        let borderClass = variance >= 0 ? "border-left: 6px solid #16a34a;" : "border-left: 6px solid #dc2626;";
+
+        html += `
+        <div class="store-card card p-3 shadow-sm" style="${borderClass}" onclick="openSalesModal(${index}, '${row.storeCode}')">
+          <h6 class="store-title fw-bold text-dark mb-2">${row.storeCode} ${row.storeName}</h6>
+          <div class="fw-bold mb-1" style="font-size: 0.8rem; color: #475569;">Sales <span class="text-primary">${currentHeaderDate}</span></div>
+          
+          <div class="mb-2">
+            <span class="fw-bold d-block" style="font-size: 0.85rem;">Total Sales</span>
+            <div class="sales-block">
+              <div>TY: <span class="val-ty">${fmtN(row.salesTY)}</span></div>
+              <div>BG: ${fmtN(row.salesBG)}</div>
+              <div class="${getColor(row.diffSalesBG)}">Diff BG: ${fmtN(row.diffSalesBG)} (${fmtP(row.varSalesBG)})</div>
+              <div>LY: ${fmtN(row.salesLY)}</div>
+              <div class="${getColor(row.diffSalesLY)}">Diff LY: ${fmtN(row.diffSalesLY)} (${fmtP(row.chgSalesLY)})</div>
+            </div>
+          </div>
+
+          <div>
+            <span class="fw-bold d-block" style="font-size: 0.85rem;">ADS</span>
+            <div class="sales-block">
+              <div>TY: <span class="val-ty">${fmtN(row.adsTY)}</span></div>
+              <div>BG: ${fmtN(row.adsBG)}</div>
+              <div class="${getColor(row.diffAdsBG)}">Diff BG: ${fmtN(row.diffAdsBG)} (${fmtP(row.varAdsBG)})</div>
+              <div>LY: ${fmtN(row.adsLY)}</div>
+              <div class="${getColor(row.diffAdsLY)}">Diff LY: ${fmtN(row.diffAdsLY)} (${fmtP(row.chgAdsLY)})</div>
+            </div>
+          </div>
+          <div class="text-end mt-2"><small class="text-primary opacity-75"><i class="bi bi-hand-index"></i> แตะเพื่อดูรายละเอียดทั้งหมด</small></div>
+        </div>`;
+      });
+
+      // อัปเดตกล่องสรุป
+      document.getElementById('salesSummaryBox').innerHTML = `
+        <div class="fw-bold text-dark mb-2"><i class="bi bi-bar-chart-fill text-primary"></i> สรุปผลการค้นหา (${data.length} สาขา)</div>
+        <div class="text-success fw-bold"><i class="bi bi-arrow-up-circle-fill"></i> ยอดทะลุเป้า (บวก): ${posCount} สาขา</div>
+        <div class="ms-4 text-muted" style="font-size: 0.8rem;">(CO: ${posCO} สาขา | FC: ${posFC} สาขา)</div>
+        
+        <div class="text-danger fw-bold mt-2"><i class="bi bi-arrow-down-circle-fill"></i> ยอดไม่ถึงเป้า (ลบ): ${negCount} สาขา</div>
+        <div class="ms-4 text-muted" style="font-size: 0.8rem;">(CO: ${negCO} สาขา | FC: ${negFC} สาขา)</div>
+      `;
+
+      document.getElementById('salesCardContainer').innerHTML = html;
+    }
+
+    function openSalesModal(index, storeCode) {
+      // ดึงอิงตาม storeCode เพื่อแก้ปัญหาตอน sort แล้ว index เปลี่ยน
+      let row = currentSalesDataList.find(r => r.storeCode === storeCode);
       
       document.getElementById('modalStoreName').innerText = `${row.storeCode} ${row.storeName}`;
-      document.getElementById('modalStoreInfo').innerText = `RM: ${row.rm} | DM: ${row.dm}`;
+      document.getElementById('modalStoreInfo').innerText = `RM: ${row.rm} | DM: ${row.dm} | TYPE: ${row.cofc}`;
       
       let html = `
         <div class="card p-3 mb-2 shadow-sm border-0">
@@ -316,7 +384,7 @@
           </div>
         </div>
 
-        <div class="card p-3 shadow-sm border-0">
+        <div class="card p-3 mb-2 shadow-sm border-0">
           <h6 class="fw-bold text-dark border-bottom pb-2">กำไร (GP)</h6>
           <div class="row text-center mt-2">
             <div class="col-4"><small class="text-muted d-block">TY</small><b>${fmtP(row.gpTY)}</b></div>
@@ -324,10 +392,19 @@
             <div class="col-4"><small class="text-muted d-block">Diff</small><b class="${getColor(row.gpDiff)}">${fmtP(row.gpDiff)}</b></div>
           </div>
         </div>
+
+        <div class="card p-3 shadow-sm border-0">
+          <h6 class="fw-bold text-dark border-bottom pb-2">EXPIRE LOSS (ยอดสูญเสีย)</h6>
+          <div class="row text-center mt-2">
+            <div class="col-4"><small class="text-muted d-block">TY (Amt)</small><b>${fmtN(row.expAmtTY)}</b></div>
+            <div class="col-4"><small class="text-muted d-block">LY (Amt)</small><b>${fmtN(row.expAmtLY)}</b></div>
+            <div class="col-4"><small class="text-muted d-block">Diff (%)</small><b class="${getColor(-row.expChg)}">${fmtP(row.expChg)}</b></div>
+          </div>
+        </div>
       `;
 
       document.getElementById('modalBodyContent').innerHTML = html;
-      detailsModal.show(); // สั่งป๊อปอัปให้เด้งขึ้น
+      detailsModal.show();
     }
 
     function showLoading(show) { document.getElementById('loading').style.display = show ? 'block' : 'none'; }
