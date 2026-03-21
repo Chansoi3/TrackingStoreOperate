@@ -16,7 +16,7 @@
     .app-header {
       background: linear-gradient(135deg, #0f2027 0%, #203a43 50%, #2c5364 100%);
       color: white; padding: 25px 0 45px 0; border-radius: 0 0 25px 25px;
-      box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+      box-shadow: 0 4px 15px rgba(0,0,0,0.1); position: relative;
     }
     
     .filter-card {
@@ -24,81 +24,126 @@
       margin-top: -30px; position: relative; z-index: 10; background: white;
     }
     
+    /* การ์ดข้อมูลร้านค้า */
     .store-card {
       border-radius: 16px; border: 1px solid #e2e8f0; 
       box-shadow: 0 6px 15px rgba(0,0,0,0.06); transition: all 0.2s ease; 
       margin-bottom: 20px; position: relative;
     }
     .store-card:active { transform: scale(0.98); }
-    
     .store-card:nth-child(odd) { background-color: #ffffff; border-left: 6px solid #2c5364; }          
     .store-card:nth-child(even) { background-color: #f4f9ff; border-left: 6px solid #6ab0e6; }         
     
     .store-title { font-size: 1.05rem; line-height: 1.3; margin-bottom: 0px; }
-    .time-box { background-color: rgba(255, 255, 255, 0.6); border-radius: 12px; padding: 10px; border: 1px solid #e9ecef;}
+    .time-box, .sales-box { background-color: rgba(255, 255, 255, 0.6); border-radius: 12px; padding: 10px; border: 1px solid #e9ecef;}
     .time-text { font-size: 1.15rem; letter-spacing: -0.5px; margin-top: 2px; margin-bottom: 4px; }
+    .sales-text { font-size: 1.1rem; letter-spacing: 0; margin-top: 2px; margin-bottom: 4px; color: #1e293b; }
     
     .status-badge { font-size: 0.75rem; padding: 5px 0; border-radius: 8px; width: 100%; display: block; }
     .form-select, .btn { border-radius: 10px; font-size: 0.9rem; }
-    
-    /* ปรับแต่งปุ่ม Filter เสริม */
     .btn-group .btn { font-size: 0.85rem; padding: 8px 0; font-weight: 600;}
+
+    /* ปุ่มเมนูหลัก */
+    .menu-btn {
+      border-radius: 16px; padding: 25px 15px; background: white;
+      border: 1px solid #e2e8f0; box-shadow: 0 8px 20px rgba(0,0,0,0.05);
+      text-align: center; color: #2c5364; text-decoration: none; display: block;
+      transition: all 0.2s ease;
+    }
+    .menu-btn:hover, .menu-btn:active { background: #f8fafc; transform: translateY(-3px); box-shadow: 0 12px 25px rgba(0,0,0,0.1); }
+    .menu-icon { font-size: 2.5rem; margin-bottom: 10px; color: #3b82f6; }
+    .back-btn { position: absolute; top: 15px; left: 15px; color: white; font-size: 1.5rem; text-decoration: none; }
   </style>
 </head>
 <body>
 
   <div class="app-header text-center">
-    <h4 class="fw-bold mb-1"><i class="bi bi-shop-window"></i> ระบบเช็คเวลาเปิด-ปิดร้าน</h4>
+    <a href="#" onclick="showPage('home')" class="back-btn" id="backBtn" style="display:none;"><i class="bi bi-arrow-left-circle"></i></a>
+    <h4 class="fw-bold mb-1" id="headerTitle"><i class="bi bi-grid-fill"></i> เลือกระบบทำงาน</h4>
   </div>
 
   <div class="container px-3">
-    <div class="card filter-card p-3 mb-3 mx-auto">
-      <div class="row g-2 align-items-end">
-        <div class="col-12">
-          <label class="form-label text-muted fw-bold mb-1" style="font-size: 0.8rem;"><i class="bi bi-calendar-event"></i> เลือกวันที่ (DD/MM/YYYY)</label>
-          <select id="dateSelect" class="form-select">
-            <option value="">-- โหลดข้อมูล... --</option>
-          </select>
+    
+    <div id="pageHome" class="mt-4">
+      <div class="row g-3">
+        <div class="col-6">
+          <a href="#" class="menu-btn" onclick="showPage('sales')">
+            <i class="bi bi-graph-up-arrow menu-icon text-success"></i>
+            <h6 class="fw-bold mb-0">เช็คยอดขาย</h6>
+          </a>
         </div>
         <div class="col-6">
-          <label class="form-label text-muted fw-bold mb-1" style="font-size: 0.8rem;">รหัส DD</label>
-          <select id="distSelect" class="form-select" onchange="updateFilters()">
-            <option value="">-- โหลด... --</option>
-          </select>
-        </div>
-        <div class="col-6">
-          <label class="form-label text-muted fw-bold mb-1" style="font-size: 0.8rem;">รหัส AM</label>
-          <select id="areaSelect" class="form-select" onchange="updateFilters()">
-            <option value="">-- ทั้งหมด --</option>
-          </select>
-        </div>
-        <div class="col-12 mt-2">
-          <label class="form-label text-muted fw-bold mb-1" style="font-size: 0.8rem;"><i class="bi bi-shop"></i> รหัส/ชื่อสาขา</label>
-          <select id="storeSelect" class="form-select">
-            <option value="">-- สาขาทั้งหมด --</option>
-          </select>
-        </div>
-        <div class="col-12 mt-3">
-          <button class="btn btn-primary w-100 fw-bold py-2 shadow-sm" onclick="fetchData()">
-            <i class="bi bi-search"></i> ค้นหาข้อมูล
-          </button>
+          <a href="#" class="menu-btn" onclick="showPage('time')">
+            <i class="bi bi-clock-history menu-icon text-primary"></i>
+            <h6 class="fw-bold mb-0">เช็คเปิด-ปิดร้าน</h6>
+          </a>
         </div>
       </div>
     </div>
 
-    <div class="row px-1 mb-4" id="statusFilterContainer" style="display: none;">
-      <div class="col-12">
-        <div class="btn-group w-100 shadow-sm" role="group">
-          <input type="radio" class="btn-check" name="statusFilter" id="filterAll" value="All" autocomplete="off" checked onchange="applyStatusFilter()">
-          <label class="btn btn-outline-primary" for="filterAll">ทั้งหมด</label>
-
-          <input type="radio" class="btn-check" name="statusFilter" id="filterLateOpen" value="LateOpen" autocomplete="off" onchange="applyStatusFilter()">
-          <label class="btn btn-outline-danger" for="filterLateOpen">เปิดสาย</label>
-
-          <input type="radio" class="btn-check" name="statusFilter" id="filterLateClose" value="LateClose" autocomplete="off" onchange="applyStatusFilter()">
-          <label class="btn btn-outline-warning" for="filterLateClose">ปิดช้า</label>
+    <div id="pageTime" style="display: none;">
+      <div class="card filter-card p-3 mb-3 mx-auto">
+        <div class="row g-2 align-items-end">
+          <div class="col-12">
+            <label class="form-label text-muted fw-bold mb-1" style="font-size: 0.8rem;"><i class="bi bi-calendar-event"></i> เลือกวันที่ (DD/MM/YYYY)</label>
+            <select id="timeDateSelect" class="form-select"><option value="">-- โหลดข้อมูล... --</option></select>
+          </div>
+          <div class="col-6">
+            <label class="form-label text-muted fw-bold mb-1" style="font-size: 0.8rem;">รหัส DD</label>
+            <select id="timeDistSelect" class="form-select" onchange="updateTimeFilters()"></select>
+          </div>
+          <div class="col-6">
+            <label class="form-label text-muted fw-bold mb-1" style="font-size: 0.8rem;">รหัส AM</label>
+            <select id="timeAreaSelect" class="form-select" onchange="updateTimeFilters()"><option value="">-- ทั้งหมด --</option></select>
+          </div>
+          <div class="col-12 mt-2">
+            <label class="form-label text-muted fw-bold mb-1" style="font-size: 0.8rem;"><i class="bi bi-shop"></i> รหัส/ชื่อสาขา</label>
+            <select id="timeStoreSelect" class="form-select"><option value="">-- สาขาทั้งหมด --</option></select>
+          </div>
+          <div class="col-12 mt-3">
+            <button class="btn btn-primary w-100 fw-bold py-2 shadow-sm" onclick="fetchTimeData()"><i class="bi bi-search"></i> ค้นหาข้อมูล</button>
+          </div>
         </div>
       </div>
+
+      <div class="row px-1 mb-4" id="statusFilterContainer" style="display: none;">
+        <div class="col-12">
+          <div class="btn-group w-100 shadow-sm" role="group">
+            <input type="radio" class="btn-check" name="statusFilter" id="filterAll" value="All" checked onchange="applyTimeStatusFilter()">
+            <label class="btn btn-outline-primary" for="filterAll">ทั้งหมด</label>
+            <input type="radio" class="btn-check" name="statusFilter" id="filterLateOpen" value="LateOpen" onchange="applyTimeStatusFilter()">
+            <label class="btn btn-outline-danger" for="filterLateOpen">เปิดสาย</label>
+            <input type="radio" class="btn-check" name="statusFilter" id="filterLateClose" value="LateClose" onchange="applyTimeStatusFilter()">
+            <label class="btn btn-outline-warning" for="filterLateClose">ปิดช้า</label>
+          </div>
+        </div>
+      </div>
+
+      <div id="timeCardContainer" class="pb-4"></div>
+    </div>
+
+    <div id="pageSales" style="display: none;">
+      <div class="card filter-card p-3 mb-4 mx-auto">
+        <div class="row g-2 align-items-end">
+          <div class="col-6">
+            <label class="form-label text-muted fw-bold mb-1" style="font-size: 0.8rem;">รหัส DM</label>
+            <select id="salesDMSelect" class="form-select" onchange="updateSalesFilters()"><option value="">-- โหลด... --</option></select>
+          </div>
+          <div class="col-6">
+            <label class="form-label text-muted fw-bold mb-1" style="font-size: 0.8rem;">รหัส RM</label>
+            <select id="salesRMSelect" class="form-select" onchange="updateSalesFilters()"><option value="">-- ทั้งหมด --</option></select>
+          </div>
+          <div class="col-12 mt-2">
+            <label class="form-label text-muted fw-bold mb-1" style="font-size: 0.8rem;"><i class="bi bi-shop"></i> รหัส/ชื่อสาขา</label>
+            <select id="salesStoreSelect" class="form-select"><option value="">-- สาขาทั้งหมด --</option></select>
+          </div>
+          <div class="col-12 mt-3">
+            <button class="btn btn-success w-100 fw-bold py-2 shadow-sm" onclick="fetchSalesData()"><i class="bi bi-search"></i> ค้นหายอดขาย</button>
+          </div>
+        </div>
+      </div>
+      
+      <div id="salesCardContainer" class="pb-4"></div>
     </div>
 
     <div id="loading" class="text-center my-5" style="display:none;">
@@ -106,167 +151,166 @@
       <p class="mt-2 text-muted fw-bold">กำลังดึงข้อมูล...</p>
     </div>
 
-    <div id="cardContainer" class="pb-4"></div>
   </div>
 
   <script>
-    // ⚠️ อย่าลืมเช็ค URL ของ Web App ให้ตรงกับของคุณนะครับ
+    // ⚠️ นำ URL ของ Google Apps Script มาใส่ที่นี่ (ต้อง Deploy ใหม่ด้วยนะครับ)
     const APPS_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbyNv8_4WfAFO5B3wcfxBWTNgHKhjSQid3r4jZfCVT2RKqAcVCDN_71neLwIg8opDxjB/exec";
     
-    let areaDataMapping = {};
-    let allStoresData = []; 
-    let currentFetchedData = []; // เพิ่มตัวแปรเก็บข้อมูลดิบที่ดึงมา เพื่อใช้ทำ Filter ในหน้าเว็บ
+    // ตัวแปรเก็บข้อมูล
+    let timeDataMapping = {}, timeAllStores = [], currentTimeData = [];
+    let salesDataMapping = {}, salesAllStores = [], currentSalesData = [];
+    let isTimeLoaded = false, isSalesLoaded = false;
 
-    window.onload = function() {
-      fetch(APPS_SCRIPT_URL + "?action=getDropdown")
-        .then(res => res.json())
-        .then(data => populateDropdowns(data))
-        .catch(err => console.error(err));
-    };
-
-    function populateDropdowns(data) {
-      areaDataMapping = data.mapping;
-      allStoresData = data.stores; 
-      
-      let dateSelect = document.getElementById('dateSelect');
-      dateSelect.innerHTML = '<option value="">-- ทุกวันที่ --</option>'; 
-      data.dates.forEach(d => dateSelect.add(new Option(d.text, d.value)));
-      if(data.dates.length > 0) dateSelect.value = data.dates[0].value; 
-
-      let distSelect = document.getElementById('distSelect');
-      distSelect.innerHTML = '<option value="">-- ทั้งหมด --</option>'; 
-      data.dists.forEach(dist => distSelect.add(new Option(dist, dist)));
-      
-      updateFilters(); 
-      fetchData(); 
-    }
-
-    function updateFilters() {
-      let distVal = document.getElementById('distSelect').value;
-      
-      let areaSelect = document.getElementById('areaSelect');
-      let currentArea = areaSelect.value;
-      areaSelect.innerHTML = '<option value="">-- ทั้งหมด --</option>';
-      if (distVal && areaDataMapping[distVal]) {
-        areaDataMapping[distVal].forEach(area => {
-          let opt = new Option(area, area);
-          if(area === currentArea) opt.selected = true;
-          areaSelect.add(opt);
-        });
-      }
-      
-      let updatedArea = areaSelect.value;
-
-      let storeSelect = document.getElementById('storeSelect');
-      let currentStore = storeSelect.value;
-      storeSelect.innerHTML = '<option value="">-- สาขาทั้งหมด --</option>';
-      
-      let filteredStores = allStoresData.filter(s => {
-         let matchDist = distVal ? s.dist === distVal : true;
-         let matchArea = updatedArea ? s.area === updatedArea : true;
-         return matchDist && matchArea;
-      });
-
-      filteredStores.forEach(s => {
-         let text = `${s.code} ${s.name}`; 
-         let opt = new Option(text, s.code);
-         if(s.code === currentStore) opt.selected = true;
-         storeSelect.add(opt);
-      });
-    }
-
-    function fetchData() {
-      let dist = document.getElementById('distSelect').value;
-      let area = document.getElementById('areaSelect').value;
-      let date = document.getElementById('dateSelect').value;
-      let store = document.getElementById('storeSelect').value; 
-      
-      document.getElementById('loading').style.display = 'block';
-      document.getElementById('cardContainer').innerHTML = '';
-      document.getElementById('statusFilterContainer').style.display = 'none'; // ซ่อนปุ่ม Filter ตอนกำลังโหลด
-
-      let url = `${APPS_SCRIPT_URL}?action=getTableData&dist=${encodeURIComponent(dist)}&area=${encodeURIComponent(area)}&date=${encodeURIComponent(date)}&store=${encodeURIComponent(store)}`;
-
-      fetch(url)
-        .then(res => res.json())
-        .then(data => {
-          currentFetchedData = data; // เก็บข้อมูลทั้งหมดไว้ในตัวแปร
-          document.getElementById('statusFilterContainer').style.display = 'block'; // แสดงปุ่ม Filter เมื่อโหลดเสร็จ
-          applyStatusFilter(); // เรียกใช้การกรองข้อมูลปัจจุบัน
-        })
-        .catch(err => {
-          document.getElementById('loading').style.display = 'none';
-          document.getElementById('cardContainer').innerHTML = '<div class="alert alert-danger text-center">ไม่สามารถเชื่อมต่อได้</div>';
-        });
-    }
-
-    // ฟังก์ชันใหม่ สำหรับกรองข้อมูลแบบ Real-time บนหน้าเว็บ
-    function applyStatusFilter() {
-      let filterType = document.querySelector('input[name="statusFilter"]:checked').value;
-      let filteredData = currentFetchedData;
-
-      if (filterType === 'LateOpen') {
-        // กรองเฉพาะสาขาที่ เปิดร้านสาย (monitorOpen คือ 'Red')
-        filteredData = currentFetchedData.filter(row => row[7] === 'Red');
-      } 
-      else if (filterType === 'LateClose') {
-        // กรองเฉพาะสาขาที่ ปิดร้านช้า (monitorClose คือ 'Red')
-        // *หมายเหตุ: ถ้าสถานะปิดช้าของคุณคือสีอื่น เช่น 'Yellow' ให้แก้ตรงนี้ได้เลยครับ
-        filteredData = currentFetchedData.filter(row => row[8] === 'Red');
-      }
-
-      renderCards(filteredData);
-    }
-
-    function renderCards(data) {
+    // ระบบสลับหน้า
+    function showPage(page) {
+      document.getElementById('pageHome').style.display = 'none';
+      document.getElementById('pageTime').style.display = 'none';
+      document.getElementById('pageSales').style.display = 'none';
+      document.getElementById('backBtn').style.display = page === 'home' ? 'none' : 'block';
       document.getElementById('loading').style.display = 'none';
-      let container = document.getElementById('cardContainer');
-      
-      if(data.length === 0) {
-        container.innerHTML = '<div class="text-center text-muted py-5"><i class="bi bi-inbox d-block fs-1"></i>ไม่พบข้อมูลในระบบ หรือไม่พบสาขาในสถานะนี้</div>';
-        return;
+
+      if (page === 'home') {
+        document.getElementById('headerTitle').innerHTML = '<i class="bi bi-grid-fill"></i> เลือกระบบทำงาน';
+        document.getElementById('pageHome').style.display = 'block';
+      } 
+      else if (page === 'time') {
+        document.getElementById('headerTitle').innerHTML = '<i class="bi bi-clock-history"></i> ระบบเช็คเปิด-ปิดร้าน';
+        document.getElementById('pageTime').style.display = 'block';
+        if (!isTimeLoaded) loadTimeDropdowns();
+      } 
+      else if (page === 'sales') {
+        document.getElementById('headerTitle').innerHTML = '<i class="bi bi-graph-up-arrow"></i> ระบบเช็คยอดขาย';
+        document.getElementById('pageSales').style.display = 'block';
+        if (!isSalesLoaded) loadSalesDropdowns();
       }
+    }
 
-      let html = '';
-      data.forEach(row => {
-        let timeInStr = row[5] ? row[5].substring(0, 5) : '-';
-        let timeOutStr = row[6] ? row[6].substring(0, 5) : '-';
+    // ================= โหมด Time =================
+    function loadTimeDropdowns() {
+      showLoading(true);
+      fetch(APPS_SCRIPT_URL + "?action=getDropdown").then(res => res.json()).then(data => {
+        timeDataMapping = data.mapping; timeAllStores = data.stores;
+        
+        let dSel = document.getElementById('timeDateSelect'); dSel.innerHTML = '<option value="">-- ทุกวันที่ --</option>';
+        data.dates.forEach(d => dSel.add(new Option(d.text, d.value)));
+        if(data.dates.length > 0) dSel.value = data.dates[0].value;
 
-        html += `
-        <div class="store-card card p-3">
+        let distSel = document.getElementById('timeDistSelect'); distSel.innerHTML = '<option value="">-- ทั้งหมด --</option>';
+        data.dists.forEach(d => distSel.add(new Option(d, d)));
+        
+        updateTimeFilters(); showLoading(false); isTimeLoaded = true;
+      });
+    }
+
+    function updateTimeFilters() {
+      let dist = document.getElementById('timeDistSelect').value;
+      let aSel = document.getElementById('timeAreaSelect'); let curA = aSel.value;
+      aSel.innerHTML = '<option value="">-- ทั้งหมด --</option>';
+      if (dist && timeDataMapping[dist]) timeDataMapping[dist].forEach(a => { let o = new Option(a, a); if(a===curA) o.selected=true; aSel.add(o); });
+      
+      let sSel = document.getElementById('timeStoreSelect'); let curS = sSel.value;
+      sSel.innerHTML = '<option value="">-- สาขาทั้งหมด --</option>';
+      timeAllStores.filter(s => (!dist || s.dist===dist) && (!aSel.value || s.area===aSel.value)).forEach(s => {
+         let o = new Option(`${s.code} ${s.name}`, s.code); if(s.code===curS) o.selected=true; sSel.add(o);
+      });
+    }
+
+    function fetchTimeData() {
+      showLoading(true); document.getElementById('timeCardContainer').innerHTML = '';
+      document.getElementById('statusFilterContainer').style.display = 'none';
+      let url = `${APPS_SCRIPT_URL}?action=getTableData&dist=${encodeURIComponent(document.getElementById('timeDistSelect').value)}&area=${encodeURIComponent(document.getElementById('timeAreaSelect').value)}&date=${encodeURIComponent(document.getElementById('timeDateSelect').value)}&store=${encodeURIComponent(document.getElementById('timeStoreSelect').value)}`;
+      
+      fetch(url).then(res => res.json()).then(data => {
+        currentTimeData = data; document.getElementById('statusFilterContainer').style.display = 'block';
+        applyTimeStatusFilter(); showLoading(false);
+      });
+    }
+
+    function applyTimeStatusFilter() {
+      let type = document.querySelector('input[name="statusFilter"]:checked').value;
+      let filtered = currentTimeData;
+      if (type === 'LateOpen') filtered = currentTimeData.filter(r => r[7] === 'Red');
+      else if (type === 'LateClose') filtered = currentTimeData.filter(r => r[8] === 'Red');
+      
+      let html = filtered.length ? '' : '<div class="text-center text-muted py-5"><i class="bi bi-inbox d-block fs-1"></i>ไม่พบข้อมูลในระบบ</div>';
+      filtered.forEach(row => {
+        html += `<div class="store-card card p-3">
           <div class="d-flex justify-content-between align-items-center mb-3">
             <h6 class="store-title fw-bold text-primary">${row[2]} ${row[3]}</h6>
             <span class="badge bg-secondary opacity-75"><i class="bi bi-calendar3"></i> ${row[4]}</span>
           </div>
-          
           <div class="row g-2 text-center mt-1">
-            <div class="col-6">
-              <div class="time-box">
-                <small class="text-muted d-block fw-bold" style="font-size: 0.75rem;">เวลาเข้าร้าน</small>
-                <div class="fw-bold time-text text-dark">${timeInStr} น.</div>
-                ${getBadge(row[7])}
-              </div>
-            </div>
-            <div class="col-6">
-              <div class="time-box">
-                <small class="text-muted d-block fw-bold" style="font-size: 0.75rem;">เวลาออกร้าน</small>
-                <div class="fw-bold time-text text-dark">${timeOutStr} น.</div>
-                ${getBadge(row[8])}
-              </div>
-            </div>
+            <div class="col-6"><div class="time-box"><small class="text-muted d-block fw-bold" style="font-size: 0.75rem;">เวลาเข้าร้าน</small><div class="fw-bold time-text text-dark">${row[5]?row[5].substring(0,5):'-'} น.</div>${getTimeBadge(row[7])}</div></div>
+            <div class="col-6"><div class="time-box"><small class="text-muted d-block fw-bold" style="font-size: 0.75rem;">เวลาออกร้าน</small><div class="fw-bold time-text text-dark">${row[6]?row[6].substring(0,5):'-'} น.</div>${getTimeBadge(row[8])}</div></div>
           </div>
-        </div>
-        `;
+        </div>`;
       });
-      container.innerHTML = html;
+      document.getElementById('timeCardContainer').innerHTML = html;
     }
-
-    function getBadge(status) {
-      if(status === 'Red') return `<span class="badge bg-danger status-badge shadow-sm"><i class="bi bi-x-circle"></i> สาย (Red)</span>`;
-      if(status === 'Yellow') return `<span class="badge bg-warning text-dark status-badge shadow-sm"><i class="bi bi-exclamation-circle"></i> เสี่ยง (Yellow)</span>`;
-      if(status === 'Green') return `<span class="badge bg-success status-badge shadow-sm"><i class="bi bi-check-circle"></i> ปกติ (Green)</span>`;
+    
+    function getTimeBadge(status) {
+      if(status === 'Red') return `<span class="badge bg-danger status-badge"><i class="bi bi-x-circle"></i> สาย (Red)</span>`;
+      if(status === 'Yellow') return `<span class="badge bg-warning text-dark status-badge"><i class="bi bi-exclamation-circle"></i> เสี่ยง (Yellow)</span>`;
+      if(status === 'Green') return `<span class="badge bg-success status-badge"><i class="bi bi-check-circle"></i> ปกติ (Green)</span>`;
       return `<span class="badge bg-secondary status-badge opacity-50">-</span>`;
     }
+
+    // ================= โหมด Sales =================
+    function loadSalesDropdowns() {
+      showLoading(true);
+      fetch(APPS_SCRIPT_URL + "?action=getSalesDropdown").then(res => res.json()).then(data => {
+        salesDataMapping = data.mapping; salesAllStores = data.stores;
+        let dmSel = document.getElementById('salesDMSelect'); dmSel.innerHTML = '<option value="">-- ทั้งหมด --</option>';
+        data.dms.forEach(d => dmSel.add(new Option(d, d)));
+        updateSalesFilters(); showLoading(false); isSalesLoaded = true;
+      });
+    }
+
+    function updateSalesFilters() {
+      let dm = document.getElementById('salesDMSelect').value;
+      let rmSel = document.getElementById('salesRMSelect'); let curRM = rmSel.value;
+      rmSel.innerHTML = '<option value="">-- ทั้งหมด --</option>';
+      if (dm && salesDataMapping[dm]) salesDataMapping[dm].forEach(r => { let o = new Option(r, r); if(r===curRM) o.selected=true; rmSel.add(o); });
+      
+      let sSel = document.getElementById('salesStoreSelect'); let curS = sSel.value;
+      sSel.innerHTML = '<option value="">-- สาขาทั้งหมด --</option>';
+      salesAllStores.filter(s => (!dm || s.dm===dm) && (!rmSel.value || s.rm===rmSel.value)).forEach(s => {
+         let o = new Option(`${s.code} ${s.name}`, s.code); if(s.code===curS) o.selected=true; sSel.add(o);
+      });
+    }
+
+    function fetchSalesData() {
+      showLoading(true); document.getElementById('salesCardContainer').innerHTML = '';
+      let url = `${APPS_SCRIPT_URL}?action=getSalesData&dm=${encodeURIComponent(document.getElementById('salesDMSelect').value)}&rm=${encodeURIComponent(document.getElementById('salesRMSelect').value)}&store=${encodeURIComponent(document.getElementById('salesStoreSelect').value)}`;
+      
+      fetch(url).then(res => res.json()).then(data => {
+        let html = data.length ? '' : '<div class="text-center text-muted py-5"><i class="bi bi-inbox d-block fs-1"></i>ไม่พบข้อมูลยอดขาย</div>';
+        data.forEach(row => {
+          let actual = Number(row.actual).toLocaleString('th-TH', {minimumFractionDigits: 2, maximumFractionDigits: 2});
+          let budget = Number(row.budget).toLocaleString('th-TH', {minimumFractionDigits: 2, maximumFractionDigits: 2});
+          let variance = Number(row.variance);
+          let varColor = variance >= 0 ? 'text-success' : 'text-danger';
+          let varIcon = variance >= 0 ? 'bi-arrow-up-right' : 'bi-arrow-down-right';
+          let varText = (variance * 100).toFixed(2) + '%'; // แสดงเป็นเปอร์เซ็นต์
+
+          html += `<div class="store-card card p-3">
+            <h6 class="store-title fw-bold text-success mb-3">${row.storeCode} ${row.storeName}</h6>
+            <div class="row g-2 text-center">
+              <div class="col-6"><div class="sales-box"><small class="text-muted d-block fw-bold" style="font-size: 0.75rem;">ยอดขาย (Actual)</small><div class="fw-bold sales-text">${actual}</div></div></div>
+              <div class="col-6"><div class="sales-box"><small class="text-muted d-block fw-bold" style="font-size: 0.75rem;">เป้าหมาย (Budget)</small><div class="fw-bold sales-text text-muted">${budget}</div></div></div>
+            </div>
+            <div class="mt-2 text-end">
+              <small class="fw-bold ${varColor}"><i class="bi ${varIcon}"></i> เทียบเป้า: ${varText}</small>
+            </div>
+          </div>`;
+        });
+        document.getElementById('salesCardContainer').innerHTML = html;
+        showLoading(false);
+      });
+    }
+
+    function showLoading(show) { document.getElementById('loading').style.display = show ? 'block' : 'none'; }
   </script>
 </body>
 </html>
