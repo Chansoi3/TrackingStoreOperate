@@ -70,7 +70,6 @@
   <div class="app-header text-center">
     <a href="#" onclick="showPage('home')" class="back-btn" id="backBtn" style="display:none;"><i class="bi bi-arrow-left-circle"></i></a>
     <h4 class="fw-bold mb-1" id="headerTitle"><i class="bi bi-grid-fill"></i> เลือกระบบทำงาน</h4>
-    <div id="fileDateDisplay" style="font-size: 0.85rem; opacity: 0.8; margin-top: 5px; display: none;"></div>
   </div>
 
   <div class="container px-3">
@@ -163,7 +162,6 @@
       document.getElementById('pageSales').style.display = 'none';
       document.getElementById('backBtn').style.display = page === 'home' ? 'none' : 'block';
       document.getElementById('loading').style.display = 'none';
-      document.getElementById('fileDateDisplay').style.display = 'none';
 
       if (page === 'home') {
         document.getElementById('headerTitle').innerHTML = '<i class="bi bi-grid-fill"></i> เลือกระบบทำงาน';
@@ -213,7 +211,25 @@
       fetch(url).then(res => res.json()).then(data => {
         let html = data.length ? '' : '<div class="text-center text-muted py-5"><i class="bi bi-inbox d-block fs-1"></i>ไม่พบข้อมูลในระบบ</div>';
         data.forEach(row => {
-          html += `<div class="store-card card p-3"><div class="d-flex justify-content-between align-items-center mb-3"><h6 class="store-title fw-bold text-primary">${row[2]} ${row[3]}</h6><span class="badge bg-secondary opacity-75"><i class="bi bi-calendar3"></i> ${row[4]}</span></div><div class="row g-2 text-center mt-1"><div class="col-6"><div class="time-box"><small class="text-muted d-block fw-bold" style="font-size: 0.75rem;">เวลาเข้าร้าน</small><div class="fw-bold time-text text-dark">${row[5]?row[5].substring(0,5):'-'} น.</div></div></div><div class="col-6"><div class="time-box"><small class="text-muted d-block fw-bold" style="font-size: 0.75rem;">เวลาออกร้าน</small><div class="fw-bold time-text text-dark">${row[6]?row[6].substring(0,5):'-'} น.</div></div></div></div></div>`;
+          let stIn = row[7], stOut = row[8];
+          
+          // 💡 ระบบแสดงแถบสีแดง/เหลือง/เขียว สำหรับโหมดเปิด-ปิดร้าน
+          let borderColor = "#cbd5e1"; // สีเทาเริ่มต้น
+          if (stIn === 'Red' || stOut === 'Red') borderColor = "#dc2626"; // แดง (สาย/ช้า)
+          else if (stIn === 'Yellow' || stOut === 'Yellow') borderColor = "#eab308"; // เหลือง (เสี่ยง)
+          else if (stIn === 'Green' && stOut === 'Green') borderColor = "#16a34a"; // เขียว (ปกติ)
+
+          html += `
+          <div class="store-card card p-3" style="border-left: 6px solid ${borderColor};">
+            <div class="d-flex justify-content-between align-items-center mb-3">
+              <h6 class="store-title fw-bold text-primary">${row[2]} ${row[3]}</h6>
+              <span class="badge bg-secondary opacity-75"><i class="bi bi-calendar3"></i> ${row[4]}</span>
+            </div>
+            <div class="row g-2 text-center mt-1">
+              <div class="col-6"><div class="time-box"><small class="text-muted d-block fw-bold" style="font-size: 0.75rem;">เวลาเข้าร้าน</small><div class="fw-bold time-text text-dark">${row[5]?row[5].substring(0,5):'-'} น.</div></div></div>
+              <div class="col-6"><div class="time-box"><small class="text-muted d-block fw-bold" style="font-size: 0.75rem;">เวลาออกร้าน</small><div class="fw-bold time-text text-dark">${row[6]?row[6].substring(0,5):'-'} น.</div></div></div>
+            </div>
+          </div>`;
         });
         document.getElementById('timeCardContainer').innerHTML = html; showLoading(false);
       });
@@ -252,20 +268,13 @@
       let url = `${APPS_SCRIPT_URL}?action=getSalesData&rm=${encodeURIComponent(document.getElementById('salesRMSelect').value)}&dm=${encodeURIComponent(document.getElementById('salesDMSelect').value)}&store=${encodeURIComponent(document.getElementById('salesStoreSelect').value)}`;
       
       fetch(url).then(res => res.json()).then(data => {
-        currentHeaderDate = data.headerDate; 
+        currentHeaderDate = data.headerDate; // ดึงวันที่จากช่อง B4 ตามต้องการ
         currentSalesDataList = data.list;
-
-        // แสดงวันที่จากไฟล์ด้านบนสุด
-        if (data.fileDate) {
-          let dateEl = document.getElementById('fileDateDisplay');
-          dateEl.innerHTML = `<i class="bi bi-info-circle"></i> ข้อมูลยอดขาย: ${data.fileDate}`;
-          dateEl.style.display = 'block';
-        }
 
         if(currentSalesDataList.length > 0) {
           document.getElementById('salesResultContainer').style.display = 'block';
           document.getElementById('salesSortSelect').value = 'default';
-          applySalesSort(); // เรียงและวาดการ์ด
+          applySalesSort(); 
         } else {
           document.getElementById('salesResultContainer').style.display = 'block';
           document.getElementById('salesSummaryBox').innerHTML = '';
@@ -280,13 +289,10 @@
       let sortedData = [...currentSalesDataList];
 
       if (sortType === 'default') {
-        // เรียงยอดบวกมากสุดไปติดลบมากสุด
         sortedData.sort((a, b) => (Number(b.diffSalesBG)||0) - (Number(a.diffSalesBG)||0));
       } else if (sortType === 'salesDesc') {
-        // เรียงยอดขายมากไปน้อย
         sortedData.sort((a, b) => (Number(b.salesTY)||0) - (Number(a.salesTY)||0));
       } else if (sortType === 'salesAsc') {
-        // เรียงยอดขายน้อยไปมาก
         sortedData.sort((a, b) => (Number(a.salesTY)||0) - (Number(b.salesTY)||0));
       }
       
@@ -294,29 +300,34 @@
     }
 
     function renderSalesCards(data) {
-      let posCount = 0, posCO = 0, posFC = 0;
-      let negCount = 0, negCO = 0, negFC = 0;
+      // ตัวแปรนับสำหรับเทียบ BG
+      let posBG = 0, posBG_CO = 0, posBG_FC = 0;
+      let negBG = 0, negBG_CO = 0, negBG_FC = 0;
+      
+      // ตัวแปรนับสำหรับเทียบ LY
+      let posLY = 0, posLY_CO = 0, posLY_FC = 0;
+      let negLY = 0, negLY_CO = 0, negLY_FC = 0;
+      
       let html = '';
 
       data.forEach((row, index) => {
-        let variance = Number(row.diffSalesBG) || 0;
+        let diffBG = Number(row.diffSalesBG) || 0;
+        let diffLY = Number(row.diffSalesLY) || 0;
         let isCO = (row.cofc || "").toString().toUpperCase().includes('CO');
         let isFC = (row.cofc || "").toString().toUpperCase().includes('FC');
 
-        // นับสรุปยอด
-        if (variance >= 0) {
-          posCount++;
-          if (isCO) posCO++; else if (isFC) posFC++;
-        } else {
-          negCount++;
-          if (isCO) negCO++; else if (isFC) negFC++;
-        }
+        // นับสรุปเทียบ BG
+        if (diffBG >= 0) { posBG++; if (isCO) posBG_CO++; else if (isFC) posBG_FC++; } 
+        else { negBG++; if (isCO) negBG_CO++; else if (isFC) negBG_FC++; }
 
-        // ตัดขอบสีการ์ดตามยอด
-        let borderClass = variance >= 0 ? "border-left: 6px solid #16a34a;" : "border-left: 6px solid #dc2626;";
+        // นับสรุปเทียบ LY
+        if (diffLY >= 0) { posLY++; if (isCO) posLY_CO++; else if (isFC) posLY_FC++; } 
+        else { negLY++; if (isCO) negLY_CO++; else if (isFC) negLY_FC++; }
+
+        let borderClass = diffBG >= 0 ? "border-left: 6px solid #16a34a;" : "border-left: 6px solid #dc2626;";
 
         html += `
-        <div class="store-card card p-3 shadow-sm" style="${borderClass}" onclick="openSalesModal(${index}, '${row.storeCode}')">
+        <div class="store-card card p-3 shadow-sm" style="${borderClass}" onclick="openSalesModal('${row.storeCode}')">
           <h6 class="store-title fw-bold text-dark mb-2">${row.storeCode} ${row.storeName}</h6>
           <div class="fw-bold mb-1" style="font-size: 0.8rem; color: #475569;">Sales <span class="text-primary">${currentHeaderDate}</span></div>
           
@@ -345,21 +356,27 @@
         </div>`;
       });
 
-      // อัปเดตกล่องสรุป
+      // 💡 อัปเดตกล่องสรุปใหม่ (แบ่งครึ่งซ้ายขวา โชว์ทั้ง BG และ LY)
       document.getElementById('salesSummaryBox').innerHTML = `
-        <div class="fw-bold text-dark mb-2"><i class="bi bi-bar-chart-fill text-primary"></i> สรุปผลการค้นหา (${data.length} สาขา)</div>
-        <div class="text-success fw-bold"><i class="bi bi-arrow-up-circle-fill"></i> ยอดทะลุเป้า (บวก): ${posCount} สาขา</div>
-        <div class="ms-4 text-muted" style="font-size: 0.8rem;">(CO: ${posCO} สาขา | FC: ${posFC} สาขา)</div>
-        
-        <div class="text-danger fw-bold mt-2"><i class="bi bi-arrow-down-circle-fill"></i> ยอดไม่ถึงเป้า (ลบ): ${negCount} สาขา</div>
-        <div class="ms-4 text-muted" style="font-size: 0.8rem;">(CO: ${negCO} สาขา | FC: ${negFC} สาขา)</div>
+        <div class="fw-bold text-dark mb-2 border-bottom pb-2"><i class="bi bi-bar-chart-fill text-primary"></i> สรุปผลการค้นหา (${data.length} สาขา)</div>
+        <div class="row text-center mt-2">
+          <div class="col-6" style="border-right: 1px solid #e2e8f0;">
+             <span class="fw-bold d-block mb-1 text-primary">เทียบเป้า (BG)</span>
+             <div class="text-success fw-bold" style="font-size: 0.8rem;"><i class="bi bi-arrow-up-circle-fill"></i> บวก: ${posBG} (CO:${posBG_CO}|FC:${posBG_FC})</div>
+             <div class="text-danger fw-bold mt-1" style="font-size: 0.8rem;"><i class="bi bi-arrow-down-circle-fill"></i> ลบ: ${negBG} (CO:${negBG_CO}|FC:${negBG_FC})</div>
+          </div>
+          <div class="col-6">
+             <span class="fw-bold d-block mb-1 text-primary">เทียบปีที่แล้ว (LY)</span>
+             <div class="text-success fw-bold" style="font-size: 0.8rem;"><i class="bi bi-arrow-up-circle-fill"></i> บวก: ${posLY} (CO:${posLY_CO}|FC:${posLY_FC})</div>
+             <div class="text-danger fw-bold mt-1" style="font-size: 0.8rem;"><i class="bi bi-arrow-down-circle-fill"></i> ลบ: ${negLY} (CO:${negLY_CO}|FC:${negLY_FC})</div>
+          </div>
+        </div>
       `;
 
       document.getElementById('salesCardContainer').innerHTML = html;
     }
 
-    function openSalesModal(index, storeCode) {
-      // ดึงอิงตาม storeCode เพื่อแก้ปัญหาตอน sort แล้ว index เปลี่ยน
+    function openSalesModal(storeCode) {
       let row = currentSalesDataList.find(r => r.storeCode === storeCode);
       
       document.getElementById('modalStoreName').innerText = `${row.storeCode} ${row.storeName}`;
@@ -396,9 +413,9 @@
         <div class="card p-3 shadow-sm border-0">
           <h6 class="fw-bold text-dark border-bottom pb-2">EXPIRE LOSS (ยอดสูญเสีย)</h6>
           <div class="row text-center mt-2">
-            <div class="col-4"><small class="text-muted d-block">TY (Amt)</small><b>${fmtN(row.expAmtTY)}</b></div>
-            <div class="col-4"><small class="text-muted d-block">LY (Amt)</small><b>${fmtN(row.expAmtLY)}</b></div>
-            <div class="col-4"><small class="text-muted d-block">Diff (%)</small><b class="${getColor(-row.expChg)}">${fmtP(row.expChg)}</b></div>
+            <div class="col-4"><small class="text-muted d-block">TY (Qty)</small><b>${fmtN(row.expQtyTY)}</b></div>
+            <div class="col-4"><small class="text-muted d-block">LY (Qty)</small><b>${fmtN(row.expQtyLY)}</b></div>
+            <div class="col-4"><small class="text-muted d-block">% To Sales</small><b class="text-dark">${fmtP(row.expToSales)}</b></div>
           </div>
         </div>
       `;
